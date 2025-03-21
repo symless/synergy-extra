@@ -1,5 +1,5 @@
 # Synergy -- mouse and keyboard sharing utility
-# Copyright (C) 2024 Symless Ltd.
+# Copyright (C) 2024 - 2025 Symless Ltd.
 #
 # This package is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -13,8 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Synergy Odin is our fork of Deskflow.
-macro(configure_odin)
+macro(configure_extra)
 
   set(DESKFLOW_SOURCE_DIR ${CMAKE_SOURCE_DIR}/odin)
 
@@ -56,15 +55,19 @@ macro(configure_meta)
   else()
     message(STATUS "Using default product name")
     set(SYNERGY_PRODUCT_NAME
-        "Synergy"
+        "Synergy (developer build)"
         CACHE STRING "Product name")
   endif()
 
   message(STATUS "Product name: ${SYNERGY_PRODUCT_NAME}")
   add_definitions(-DSYNERGY_PRODUCT_NAME="${SYNERGY_PRODUCT_NAME}")
 
-  message(STATUS "Edition type: ${SYNERGY_EDITION_TYPE}")
-add_definitions(-DSYNERGY_EDITION_TYPE="${SYNERGY_EDITION_TYPE}")
+  if (NOT "${SYNERGY_EDITION_TYPE}" STREQUAL "")
+    message(STATUS "Edition type: ${SYNERGY_EDITION_TYPE}")
+  else()
+    message(STATUS "Edition type not set")
+  endif()
+  add_definitions(-DSYNERGY_EDITION_TYPE="${SYNERGY_EDITION_TYPE}")
 
   set(DESKFLOW_APP_ID
       "synergy"
@@ -158,3 +161,5 @@ macro(configure_bin_names)
       CACHE STRING "Filename of the legacy binary")
 
 endmacro()
+
+configure_extra()
