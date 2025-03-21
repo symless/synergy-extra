@@ -40,7 +40,7 @@ if(APPLE)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0")
 endif()
 
-set(GUI_RES_DIR ${DESKFLOW_RES_DIR}/gui)
+message(STATUS "GUI res dir: ${GUI_RES_DIR}")
 set(GUI_QRC_FILE ${GUI_RES_DIR}/app.qrc)
 
 set(DEFAULT_ENABLE_ACTIVATION ON)
