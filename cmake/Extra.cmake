@@ -15,8 +15,6 @@
 
 macro(configure_extra)
 
-  set(DESKFLOW_SOURCE_DIR ${CMAKE_SOURCE_DIR}/odin)
-
   configure_meta()
   configure_dist()
   configure_bin_names()
@@ -40,8 +38,6 @@ macro(configure_gui_hook)
   set(DESKFLOW_GUI_HOOK_VERSION
     "synergy::hooks::onVersionCheck(url);"
   )
-
-  include_directories(${CMAKE_SOURCE_DIR}/src/lib)
 
 endmacro()
 

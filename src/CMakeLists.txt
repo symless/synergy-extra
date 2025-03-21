@@ -17,7 +17,6 @@ add_definitions(-DDESKFLOW_WEBSITE_URL="${DESKFLOW_WEBSITE_URL}")
 
 include_directories(./lib)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
-include_directories(${DESKFLOW_SOURCE_DIR}/src/lib)
 
 add_subdirectory(lib)
 #add_subdirectory(test)
