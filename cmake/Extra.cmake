@@ -15,6 +15,11 @@
 
 macro(configure_extra)
 
+  set(SYNERGY_EXTRA_ROOT "ext/synergy-extra")
+  message(STATUS "Extra project root: ${SYNERGY_EXTRA_ROOT}")
+  
+  include_directories("${SYNERGY_EXTRA_ROOT}/src/lib")
+
   configure_meta()
   configure_dist()
   configure_bin_names()
@@ -98,7 +103,7 @@ macro(configure_meta)
       CACHE STRING "Text label for the help menu item")
 
   set(DESKFLOW_RES_DIR
-      "${CMAKE_SOURCE_DIR}/res"
+      "${EXTRA_ROOT}/res"
       CACHE STRING "Path to the res directory")
 
   set(DESKFLOW_MAC_BUNDLE_CODE
@@ -125,7 +130,7 @@ macro(configure_dist)
       CACHE STRING "GUID for 32-bit MSI installer")
 
   set(DESKFLOW_BUNDLE_SOURCE_DIR
-      ${CMAKE_SOURCE_DIR}/res/dist/mac/bundle
+      ${EXTRA_ROOT}/res/dist/mac/bundle
       CACHE PATH "Path to the macOS app bundle")
 
 endmacro()
