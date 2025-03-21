@@ -1,5 +1,5 @@
 # Synergy -- mouse and keyboard sharing utility
-# Copyright (C) 2024 Symless Ltd.
+# Copyright (C) 2024 - 2025 Symless Ltd.
 #
 # This package is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,22 +15,55 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-project(synergy C CXX)
+project(synergy-extra C CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 
 option(SYNERGY_VERSION_CHECK "Enable version check" ON)
 if (SYNERGY_VERSION_CHECK)
   add_definitions(-DSYNERGY_VERSION_CHECK)
 endif()
 
-include(cmake/Odin.cmake)
-include(cmake/Licensing.cmake)
-include(cmake/Build.cmake)
-include(cmake/Libraries.cmake)
+if(WIN32)
+  message(STATUS "Enabling warnings as errors (MSVC)")
+  add_compile_options(/WX)
+elseif(UNIX)
+  message(STATUS "Enabling warnings as errors (GNU/Clang)")
+  add_compile_options(-Werror)
+endif()
 
-configure_odin()
-configure_licensing()
-configure_build()
-configure_libs()
+if(APPLE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0")
+endif()
 
-add_subdirectory(odin)
+set(GUI_RES_DIR ${DESKFLOW_RES_DIR}/gui)
+set(GUI_QRC_FILE ${GUI_RES_DIR}/app.qrc)
+
+set(DEFAULT_ENABLE_ACTIVATION ON)
+if("$ENV{SYNERGY_ENABLE_ACTIVATION}" STREQUAL "false")
+  set(DEFAULT_ENABLE_ACTIVATION OFF)
+endif()
+
+# activation is off by default to make life easier for contributors.
+option(SYNERGY_ENABLE_ACTIVATION "Enable activation dialog, etc"
+       ${DEFAULT_ENABLE_ACTIVATION})
+
+if(SYNERGY_ENABLE_ACTIVATION)
+  message(STATUS "License activation is enabled")
+  add_definitions(-DSYNERGY_ENABLE_ACTIVATION)
+else()
+  message(STATUS "License activation is disabled")
+endif()
+
+find_package(
+  Qt6
+  COMPONENTS Core Widgets Network
+  REQUIRED)
+
+message(STATUS "Qt version: ${Qt6_VERSION}")
+
 add_subdirectory(src)
