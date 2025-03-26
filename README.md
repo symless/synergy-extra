@@ -1,5 +1,5 @@
 # Synergy Extra
 
-This repository contains open source customer-focused technology stack for Synergy.
+This repository contains extra open source customer-focused components for Synergy.
 
 Main repository: https://github.com/symless/synergy
