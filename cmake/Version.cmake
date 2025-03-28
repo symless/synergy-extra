@@ -48,28 +48,7 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   if(NOT GIT_FOUND)
     message(FATAL_ERROR "Git not found")
   endif()
-
   message(VERBOSE "Git repo: " ${CMAKE_CURRENT_SOURCE_DIR})
-
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} rev-parse --short=8 HEAD
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_VARIABLE git_sha_short
-    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  message(VERBOSE "Git SHA short: " ${git_sha_short})
-
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} rev-list --tags --count
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_VARIABLE git_tag_count
-    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  message(VERBOSE "Git tag count: " ${git_tag_count})
-
-  if(git_tag_count EQUAL 0)
-    message(FATAL_ERROR "No tags found in Git repository")
-  endif()
 
   execute_process(
     COMMAND ${GIT_EXECUTABLE} describe origin/master --long --match "v[0-9]*"
@@ -77,18 +56,25 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     OUTPUT_VARIABLE git_describe
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-
   if (NOT git_describe)
     message(FATAL_ERROR "No version tags found in the Git repository")
   endif()
-
   message(VERBOSE "Git describe: " ${git_describe})
 
   string(REGEX REPLACE ".*-([0-9]+)-g.*" "\\1" rev_count ${git_describe})
+  if ("${rev_count}" STREQUAL "")
+    message(FATAL_ERROR "No revision count found in Git describe output")
+  endif()
 
-  set(version "${match_major}.${minor_match}.${patch_match}+r${rev_count}")
+  if (rev_count EQUAL 0)
+    # When on the release tag, use original version which may contain a stage (e.g. 1.2.3-beta)
+    message(VERBOSE "On release tag (no changes since tag)")
+  else()
+    message(VERBOSE "Changes since last tag: " ${rev_count})
+    set(version "${match_major}.${minor_match}.${patch_match}-snapshot+r${rev_count}")
+  endif()
+
   set(${VERSION} "${version}" PARENT_SCOPE)
-  
   set(${VERSION_MAJOR} ${match_major} PARENT_SCOPE)
   set(${VERSION_MINOR} ${minor_match} PARENT_SCOPE)
   set(${VERSION_PATCH} ${patch_match} PARENT_SCOPE)
