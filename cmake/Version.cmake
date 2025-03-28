@@ -26,7 +26,7 @@ function(version_from_git_tags VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION
     message(FATAL_ERROR "Git not found")
   endif()
 
-  message(STATUS "Git repo: " ${CMAKE_CURRENT_SOURCE_DIR})
+  message(VERBOSE "Git repo: " ${CMAKE_CURRENT_SOURCE_DIR})
 
   execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --short=8 HEAD
@@ -55,7 +55,7 @@ function(version_from_git_tags VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 
-  message(STATUS "Git describe: " ${git_describe})
+  message(VERBOSE "Git describe: " ${git_describe})
 
   string(FIND ${git_describe} "v" tag_version_found)
   if(tag_version_found EQUAL -1)
