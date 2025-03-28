@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-  # Partially based on back-ported upstream code.
+# Partially based on back-ported upstream code.
 function(version_from_git_tags VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION)
 
   set(git_path "${CMAKE_CURRENT_SOURCE_DIR}/.git")
@@ -62,12 +62,12 @@ function(version_from_git_tags VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION
     message(FATAL_ERROR "No version tags found in the Git repository")
   endif()
 
-  string(REGEX MATCH [0-9]+ match_major ${git_describe})
-  string(REGEX MATCH \\.[0-9]+ minor_match ${git_describe})
+  string(REGEX MATCH "[0-9]+" match_major ${git_describe})
+  string(REGEX MATCH "\\.[0-9]+" minor_match ${git_describe})
   string(REPLACE "." "" minor_match "${minor_match}")
-  string(REGEX MATCH [0-9]+\- patch_match ${git_describe})
+  string(REGEX MATCH "[0-9]+-" patch_match ${git_describe})
   string(REPLACE "-" "" patch_match "${patch_match}")
-  string(REGEX MATCH \-[0-9]+\- rev_match ${git_describe})
+  string(REGEX MATCH "-[0-9]+-" rev_match ${git_describe})
   string(REPLACE "-" "" rev_match "${rev_match}")
 
   set(${VERSION_MAJOR} ${match_major} PARENT_SCOPE)
