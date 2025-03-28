@@ -3,7 +3,10 @@
   "ignorePaths": [],
   "dictionaryDefinitions": [],
   "dictionaries": [],
-  "words": ["deskflow"],
+  "words": [
+    "deskflow",
+    "endfunction"
+  ],
   "ignoreWords": [],
   "import": []
 }
