@@ -15,6 +15,8 @@
 
 include(${CMAKE_CURRENT_LIST_DIR}/Version.cmake)
 
+message(STATUS "Getting version from git tags")
+
 version_from_git_tags(VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION)
 set(version "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}+r${VERSION_REVISION}")
 message(STATUS "Version: " ${version})
