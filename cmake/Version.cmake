@@ -52,7 +52,7 @@ function(version_from_git_tags VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION
   # since last tag only on master. This is because we use squash merge instead of rebasing;
   # using describe on the branch would give us a superficially higher revision number.
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe master --long --match "v[0-9]*"
+    COMMAND ${GIT_EXECUTABLE} describe origin/master --long --match "v[0-9]*"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     OUTPUT_VARIABLE git_describe
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
