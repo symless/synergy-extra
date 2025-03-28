@@ -15,12 +15,13 @@
 
 include(${CMAKE_CURRENT_LIST_DIR}/Version.cmake)
 
-message(STATUS "Getting version from git tags")
+version_from_git_tags(VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION)
+message(STATUS "Version: " ${VERSION})
 
-version_from_git_tags(VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION)
-set(version "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}+r${VERSION_REVISION}")
-message(STATUS "Version: " ${version})
+if ("${VERSION_FILE}" STREQUAL "")
+  message(FATAL_ERROR "VERSION_FILE not set")
+endif()
 
-set(version_file "${CMAKE_BINARY_DIR}/VERSION")
-file(WRITE ${version_file} ${version})
-message(STATUS "File: ${version_file}")
+set(version_file "${CMAKE_BINARY_DIR}/${VERSION_FILE}")
+file(WRITE ${version_file} ${VERSION})
+message(VERBOSE "Version file: ${version_file}")
