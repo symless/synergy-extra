@@ -48,8 +48,11 @@ function(version_from_git_tags VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION
     message(FATAL_ERROR "No tags found in Git repository")
   endif()
 
+  # This differs from upstream in that we use `git describe master` to count changes
+  # since last tag only on master. This is because we use squash merge instead of rebasing;
+  # using describe on the branch would give us a superficially higher revision number.
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe --long --match v* --always
+    COMMAND ${GIT_EXECUTABLE} describe master --long --match v* --always
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     OUTPUT_VARIABLE git_describe
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE

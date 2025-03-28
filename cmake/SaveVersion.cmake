@@ -20,5 +20,5 @@ set(version "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}+r${VERSION_REVIS
 message(STATUS "Version: " ${version})
 
 set(version_file "${CMAKE_BINARY_DIR}/VERSION")
-file(WRITE ${version_file} "v${version}")
+file(WRITE ${version_file} ${version})
 message(STATUS "File: ${version_file}")
