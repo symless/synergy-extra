@@ -66,9 +66,17 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     message(FATAL_ERROR "No revision count found in Git describe output")
   endif()
 
-  if (rev_count EQUAL 0)
-    # When on the release tag, use original version which may contain a stage (e.g. 1.2.3-beta)
-    message(VERBOSE "On release tag (no changes since tag)")
+  # Controlled by CI, should be set to on when build triggered by a tag.
+  # Strangely, even with `fetch-depth: 0` (gets all the tags), the `git describe` command
+  # only sometimes works as expected and returns the tag name (bug only reproducible on CI).
+  option(SYNERGY_RELEASE "Release version" OFF)
+  if ("$ENV{SYNERGY_RELEASE}" STREQUAL "true")
+    message(VERBOSE "Release env var is set")
+    set(SYNERGY_RELEASE ON)
+  endif()
+
+  if ($SYNERGY_RELEASE)
+    message(VERBOSE "Version is release")
   else()
     message(VERBOSE "Changes since last tag: " ${rev_count})
 
