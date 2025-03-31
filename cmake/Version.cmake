@@ -76,7 +76,7 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     set(SYNERGY_RELEASE ON)
   endif()
 
-  if ($SYNERGY_RELEASE)
+  if (SYNERGY_RELEASE)
     message(VERBOSE "Version is release")
   else()
     message(VERBOSE "Changes since last tag: " ${rev_count})
