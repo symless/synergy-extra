@@ -71,6 +71,12 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     message(VERBOSE "On release tag (no changes since tag)")
   else()
     message(VERBOSE "Changes since last tag: " ${rev_count})
+
+    # The `snapshot` stage is set here regardless of what the stage is in the version file,
+    # which serves 2 purposes:
+    # 1. It lets QA know that this is a snapshot and not a release.
+    # 2. When uploading to the packages repo, files with `-snapshot` in the name are
+    #    are uploaded to a separate directory, making packages easier for QA to find.
     set(version "${match_major}.${minor_match}.${patch_match}-snapshot+r${rev_count}")
   endif()
 
