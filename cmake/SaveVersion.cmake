@@ -22,6 +22,5 @@ if ("${VERSION_FILE}" STREQUAL "")
   message(FATAL_ERROR "VERSION_FILE not set")
 endif()
 
-set(version_file "${CMAKE_BINARY_DIR}/${VERSION_FILE}")
-file(WRITE ${version_file} ${VERSION})
-message(VERBOSE "Version file: ${version_file}")
+message(STATUS "Writing to file: ${VERSION_FILE}")
+file(WRITE ${VERSION_FILE} ${VERSION})
