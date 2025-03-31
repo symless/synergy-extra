@@ -66,9 +66,10 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     message(FATAL_ERROR "No revision count found in Git describe output")
   endif()
 
-  # Controlled by CI, should be set to on when build triggered by a tag.
-  # Strangely, even with `fetch-depth: 0` (gets all the tags), the `git describe` command
-  # only sometimes works as expected and returns the tag name (bug only reproducible on CI).
+  # Env var is normally controlled by CI, should be set when build triggered by a tag.
+  # Strangely, even with GitHub actions `actions/checkout@v4` option `fetch-depth: 0` 
+  # (gets all the tags), the `git describe` command only sometimes works as expected
+  # and returns the tag name (bug only reproducible on CI).
   option(SYNERGY_RELEASE "Release version" OFF)
   if ("$ENV{SYNERGY_RELEASE}" STREQUAL "true")
     message(VERBOSE "Release env var is set")
