@@ -58,13 +58,12 @@ void LicenseSettings::load()
 
 void LicenseSettings::save()
 {
-
   if (m_pSystemSettings->isWritable()) {
     qDebug("saving serial key to system settings");
     m_pSystemSettings->setValue(kSerialKeySettingKey, m_serialKey);
     m_pSystemSettings->sync();
   } else {
-    qWarning("not saving serial key to system settings, not writable");
+    qDebug("not saving serial key to system settings, not writable");
   }
 
   qDebug("saving serial key to user settings");
