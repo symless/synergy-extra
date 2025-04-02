@@ -42,6 +42,17 @@ using namespace std::chrono;
 using namespace synergy::gui::license;
 using License = synergy::license::License;
 
+LicenseHandler::LicenseHandler()
+{
+  connect(&m_activator, &LicenseActivator::activationFailed, this, &LicenseHandler::activationFailed);
+  connect(&m_activator, &LicenseActivator::activationSucceeded, this, [this] {
+    qDebug("saving license as activated");
+    m_settings.setActivated(true);
+    m_settings.save();
+    emit activationSucceeded();
+  });
+}
+
 bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
 {
   m_mainWindow = parent;
@@ -74,15 +85,20 @@ bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
     return showActivationDialog();
   }
 
-  if (m_license.isValid()) {
-    qDebug("license is valid, continuing with start");
-    updateWindowTitle();
-    clampFeatures(false);
-    return true;
+  if (!m_license.isValid()) {
+    qDebug("license not valid, showing activation dialog");
+    return showActivationDialog();
   }
 
-  qDebug("license not valid, showing activation dialog");
-  return showActivationDialog();
+  if (!m_settings.activated()) {
+    qWarning("license is not activated, showing activation dialog");
+    return showActivationDialog();
+  }
+
+  qDebug("license is valid, continuing with start");
+  updateWindowTitle();
+  clampFeatures(false);
+  return true;
 }
 
 void LicenseHandler::handleSettings(
@@ -272,15 +288,17 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
     return kExpired;
   }
 
-  // Condition must run *just before* the license member is set.
-  if (serialKey == m_license.serialKey()) {
-    qDebug("serial key did not change, ignoring");
-    return kUnchanged;
-  }
-
+  const auto oldSerialKey = m_license.serialKey();
   m_license = license;
 
-  // Condition must run *after* the license member is set.
+  if (!m_license.serialKey().isOffline) {
+    qDebug("online serial key, activating");
+    m_activator.activate({hexString, m_appConfig->serverGroupChecked()});
+    return kActivating;
+  }
+
+  // This delayed check logic seems really complex. Is it really worth the maintenance and testing cost?
+  // Condition must run *after* the license member is set, since it's async callback uses this member.
   if (!m_license.isExpired() && m_license.isTimeLimited()) {
     auto secondsLeft = m_license.secondsLeft();
     if (secondsLeft.count() < INT_MAX) {
@@ -290,6 +308,11 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
     } else {
       qDebug("license expiry too distant to schedule timer");
     }
+  }
+
+  if (serialKey == oldSerialKey) {
+    qDebug("serial key did not change, ignoring");
+    return kUnchanged;
   }
 
   return kSuccess;

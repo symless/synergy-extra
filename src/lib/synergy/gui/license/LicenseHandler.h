@@ -18,6 +18,7 @@
 #pragma once
 
 #include "synergy/gui/AppTime.h"
+#include "synergy/gui/license/LicenseActivator.h"
 #include "synergy/gui/license/LicenseSettings.h"
 #include "synergy/license/License.h"
 #include "synergy/license/Product.h"
@@ -46,7 +47,10 @@ public:
     kUnchanged,
     kInvalid,
     kExpired,
+    kActivating
   };
+
+  explicit LicenseHandler();
 
   static LicenseHandler &instance()
   {
@@ -68,6 +72,10 @@ public:
   SetSerialKeyResult setLicense(const QString &hexString, bool allowExpired = false);
   void clampFeatures(bool enableTlsIfAvailable);
 
+signals:
+  void activationFailed(const QString &message);
+  void activationSucceeded();
+
 private:
   void checkTlsCheckBox(QDialog *parent, QCheckBox *checkBoxEnableTls, bool showDialog) const;
   void checkInvertConnectionCheckBox(QDialog *parent, QCheckBox *checkBoxInvertConnection, bool showDialog) const;
@@ -83,4 +91,5 @@ private:
   QMainWindow *m_mainWindow = nullptr;
   AppConfig *m_appConfig = nullptr;
   synergy::gui::AppTime m_time;
+  synergy::gui::license::LicenseActivator m_activator;
 };

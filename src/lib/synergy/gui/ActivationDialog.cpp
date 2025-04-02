@@ -20,11 +20,9 @@
 #include "CancelActivationDialog.h"
 #include "gui/config/AppConfig.h"
 #include "gui/styles.h"
-#include "gui/tls/TlsUtility.h"
 #include "synergy/gui/constants.h"
 #include "synergy/gui/license/LicenseHandler.h"
 #include "synergy/gui/license/license_notices.h"
-#include "synergy/license/Product.h"
 #include "synergy/license/parse_serial_key.h"
 #include "ui_ActivationDialog.h"
 
@@ -54,11 +52,13 @@ ActivationDialog::ActivationDialog(QWidget *parent, AppConfig &appConfig, Licens
   if (!m_licenseHandler.license().isExpired()) {
     m_ui->m_widgetNotice->hide();
   }
+
+  connect(&m_licenseHandler, &LicenseHandler::activationSucceeded, this, &QDialog::accept);
+  connect(&m_licenseHandler, &LicenseHandler::activationFailed, this, &ActivationDialog::showErrorDialog);
 }
 
 void ActivationDialog::refreshSerialKey()
 {
-
   const QString envSerialKey = qEnvironmentVariable("SYNERGY_TEST_SERIAL_KEY");
   if (!envSerialKey.isEmpty()) {
     qDebug("using serial key from env var");
@@ -111,6 +111,12 @@ void ActivationDialog::accept()
   }
 
   const auto result = m_licenseHandler.setLicense(serialKey);
+  if (result == Result::kActivating) {
+    qInfo("activating license");
+    m_ui->m_pLabelNotice->setText("Activating...");
+    return;
+  }
+
   if (result != Result::kSuccess) {
     showResultDialog(result);
     return;

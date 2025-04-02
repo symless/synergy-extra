@@ -1,6 +1,6 @@
 /*
- * Synergy -- mouse and keyboard sharing utility
- * Copyright (C) 2024 Symless Ltd.
+ * synergy -- mouse and keyboard sharing utility
+ * Copyright (C) 2022-2025 Synergy Ltd.
  *
  * This package is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,44 +17,40 @@
 
 #pragma once
 
-#include <QSettings>
-#include <QString>
-#include <QUuid>
+#include <QNetworkAccessManager>
+#include <QObject>
+#include <QTimer>
+
+class QNetworkReply;
 
 namespace synergy::gui::license {
 
-class LicenseSettings : public QObject
+class LicenseActivator : public QObject
 {
   Q_OBJECT
+
 public:
-  LicenseSettings();
-  virtual ~LicenseSettings() = default;
-  void load();
-  void save();
+  struct Data
+  {
+    QString serialKey;
+    bool isServer;
+  };
 
-  QString serialKey() const
-  {
-    return m_serialKey;
-  }
-  void setSerialKey(const QString &serialKey)
-  {
-    m_serialKey = serialKey;
-  }
+  explicit LicenseActivator();
 
-  bool activated() const
-  {
-    return m_activated;
-  }
-  void setActivated(bool activated)
-  {
-    m_activated = activated;
-  }
+  void activate(Data activateData);
+
+signals:
+  void activationFailed(const QString &message);
+  void activationSucceeded();
+
+private slots:
+  void handleResponse(QNetworkReply *reply);
 
 private:
-  QSettings *m_pUserSettings;
-  QSettings *m_pSystemSettings;
-  QString m_serialKey;
-  bool m_activated = false;
+  QByteArray getRequestData(Data activateData);
+
+  QNetworkAccessManager m_manager;
 };
 
 } // namespace synergy::gui::license

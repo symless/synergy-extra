@@ -23,6 +23,7 @@
 namespace synergy::gui::license {
 
 const auto kSerialKeySettingKey = "serialKey";
+const auto kActivatedSettingKey = "activated";
 
 #if defined(Q_OS_UNIX)
 const auto kUnixSystemConfigPath = "/usr/local/etc/";
@@ -61,6 +62,7 @@ void LicenseSettings::save()
   if (m_pSystemSettings->isWritable()) {
     qDebug("saving serial key to system settings");
     m_pSystemSettings->setValue(kSerialKeySettingKey, m_serialKey);
+    m_pSystemSettings->setValue(kActivatedSettingKey, m_activated);
     m_pSystemSettings->sync();
   } else {
     qDebug("not saving serial key to system settings, not writable");
@@ -68,6 +70,7 @@ void LicenseSettings::save()
 
   qDebug("saving serial key to user settings");
   m_pUserSettings->setValue(kSerialKeySettingKey, m_serialKey);
+  m_pUserSettings->setValue(kActivatedSettingKey, m_activated);
   m_pUserSettings->sync();
 }
 
