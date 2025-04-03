@@ -17,7 +17,9 @@
 
 #pragma once
 
+#include "gui/core/CoreProcess.h"
 #include "synergy/gui/AppTime.h"
+#include "synergy/gui/license/LicenseActivator.h"
 #include "synergy/gui/license/LicenseSettings.h"
 #include "synergy/license/License.h"
 #include "synergy/license/Product.h"
@@ -45,8 +47,10 @@ public:
     kFatal,
     kUnchanged,
     kInvalid,
-    kExpired,
+    kExpired
   };
+
+  explicit LicenseHandler();
 
   static LicenseHandler &instance()
   {
@@ -60,6 +64,7 @@ public:
       QRadioButton *userScope
   ) const;
   void handleVersionCheck(QString &versionUrl);
+  bool handleCoreStart(deskflow::gui::CoreProcess *coreProcess);
   bool loadSettings();
   void saveSettings();
   const License &license() const;
@@ -83,4 +88,5 @@ private:
   QMainWindow *m_mainWindow = nullptr;
   AppConfig *m_appConfig = nullptr;
   synergy::gui::AppTime m_time;
+  synergy::gui::license::LicenseActivator m_activator;
 };

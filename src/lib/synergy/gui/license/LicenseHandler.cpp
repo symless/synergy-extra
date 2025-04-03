@@ -18,9 +18,10 @@
 #include "LicenseHandler.h"
 
 #include "ActivationDialog.h"
-#include "constants.h"
 #include "dialogs/UpgradeDialog.h"
 #include "gui/config/AppConfig.h"
+#include "gui/styles.h"
+#include "synergy/gui/constants.h"
 #include "synergy/gui/license/license_utils.h"
 #include "synergy/license/Product.h"
 
@@ -41,6 +42,10 @@
 using namespace std::chrono;
 using namespace synergy::gui::license;
 using License = synergy::license::License;
+
+LicenseHandler::LicenseHandler()
+{
+}
 
 bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
 {
@@ -74,15 +79,15 @@ bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
     return showActivationDialog();
   }
 
-  if (m_license.isValid()) {
-    qDebug("license is valid, continuing with start");
-    updateWindowTitle();
-    clampFeatures(false);
-    return true;
+  if (!m_license.isValid()) {
+    qDebug("license not valid, showing activation dialog");
+    return showActivationDialog();
   }
 
-  qDebug("license not valid, showing activation dialog");
-  return showActivationDialog();
+  qDebug("license is valid, continuing with start");
+  updateWindowTitle();
+  clampFeatures(false);
+  return true;
 }
 
 void LicenseHandler::handleSettings(
@@ -122,6 +127,50 @@ void LicenseHandler::handleVersionCheck(QString &versionUrl)
   } else {
     versionUrl.append("/personal");
   }
+}
+
+bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
+{
+  using namespace synergy::gui;
+  using namespace deskflow::gui;
+
+  if (m_settings.activated()) {
+    qDebug("license is activated, starting core");
+    return true;
+  }
+
+  if (m_license.serialKey().isOffline) {
+    qDebug("offline serial key, starting core");
+    return true;
+  }
+
+  disconnect(&m_activator, &LicenseActivator::activationFailed, this, nullptr);
+  connect(&m_activator, &LicenseActivator::activationFailed, [this](const QString &message) {
+    QString fullMessage = QString("<p>There was a problem activating your license.</p>"
+                                  R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
+                                  "and provide the following information:</p>"
+                                  "%3")
+                              .arg(kUrlContact)
+                              .arg(kColorSecondary)
+                              .arg(message);
+    QMessageBox::critical(m_mainWindow, "Activation failed", fullMessage);
+  });
+
+  disconnect(&m_activator, &LicenseActivator::activationSucceeded, this, nullptr);
+  connect(&m_activator, &LicenseActivator::activationSucceeded, [this, coreProcess] {
+    qDebug("license activation succeeded, saving settings");
+    m_settings.setActivated(true);
+    m_settings.save();
+
+    qDebug("resuming core process after activation");
+    coreProcess->start();
+  });
+
+  qDebug("online serial key, activating");
+  const auto serialKey = QString::fromStdString(m_license.serialKey().hexString);
+  m_activator.activate({serialKey, m_appConfig->serverGroupChecked()});
+
+  return false;
 }
 
 bool LicenseHandler::loadSettings()
@@ -272,15 +321,11 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
     return kExpired;
   }
 
-  // Condition must run *just before* the license member is set.
-  if (serialKey == m_license.serialKey()) {
-    qDebug("serial key did not change, ignoring");
-    return kUnchanged;
-  }
-
+  const auto oldSerialKey = m_license.serialKey();
   m_license = license;
 
-  // Condition must run *after* the license member is set.
+  // This delayed check logic seems really complex. Is it really worth the maintenance and testing cost?
+  // Condition must run *after* the license member is set, since it's async callback uses this member.
   if (!m_license.isExpired() && m_license.isTimeLimited()) {
     auto secondsLeft = m_license.secondsLeft();
     if (secondsLeft.count() < INT_MAX) {
@@ -290,6 +335,11 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
     } else {
       qDebug("license expiry too distant to schedule timer");
     }
+  }
+
+  if (serialKey == oldSerialKey) {
+    qDebug("serial key did not change, ignoring");
+    return kUnchanged;
   }
 
   return kSuccess;

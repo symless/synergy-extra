@@ -20,11 +20,9 @@
 #include "CancelActivationDialog.h"
 #include "gui/config/AppConfig.h"
 #include "gui/styles.h"
-#include "gui/tls/TlsUtility.h"
 #include "synergy/gui/constants.h"
 #include "synergy/gui/license/LicenseHandler.h"
 #include "synergy/gui/license/license_notices.h"
-#include "synergy/license/Product.h"
 #include "synergy/license/parse_serial_key.h"
 #include "ui_ActivationDialog.h"
 
@@ -44,7 +42,6 @@ ActivationDialog::ActivationDialog(QWidget *parent, AppConfig &appConfig, Licens
       m_pAppConfig(&appConfig),
       m_licenseHandler(licenseHandler)
 {
-
   m_ui->setupUi(this);
 
   m_ui->m_pLabelNotice->setStyleSheet(kStyleNoticeLabel);
@@ -58,7 +55,6 @@ ActivationDialog::ActivationDialog(QWidget *parent, AppConfig &appConfig, Licens
 
 void ActivationDialog::refreshSerialKey()
 {
-
   const QString envSerialKey = qEnvironmentVariable("SYNERGY_TEST_SERIAL_KEY");
   if (!envSerialKey.isEmpty()) {
     qDebug("using serial key from env var");
@@ -185,7 +181,7 @@ void ActivationDialog::showSuccessDialog()
 
 void ActivationDialog::showErrorDialog(const QString &message)
 {
-  QString fullMessage = QString("<p>There was a problem activating Deskflow.</p>"
+  QString fullMessage = QString("<p>There was a problem with your serial key.</p>"
                                 R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
                                 "and provide the following information:</p>"
                                 "%3")
