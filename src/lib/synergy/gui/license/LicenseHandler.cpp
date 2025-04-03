@@ -18,9 +18,10 @@
 #include "LicenseHandler.h"
 
 #include "ActivationDialog.h"
-#include "constants.h"
 #include "dialogs/UpgradeDialog.h"
 #include "gui/config/AppConfig.h"
+#include "gui/styles.h"
+#include "synergy/gui/constants.h"
 #include "synergy/gui/license/license_utils.h"
 #include "synergy/license/Product.h"
 
@@ -44,13 +45,6 @@ using License = synergy::license::License;
 
 LicenseHandler::LicenseHandler()
 {
-  connect(&m_activator, &LicenseActivator::activationFailed, this, &LicenseHandler::activationFailed);
-  connect(&m_activator, &LicenseActivator::activationSucceeded, this, [this] {
-    qDebug("saving license as activated");
-    m_settings.setActivated(true);
-    m_settings.save();
-    emit activationSucceeded();
-  });
 }
 
 bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
@@ -87,11 +81,6 @@ bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
 
   if (!m_license.isValid()) {
     qDebug("license not valid, showing activation dialog");
-    return showActivationDialog();
-  }
-
-  if (!m_settings.activated()) {
-    qWarning("license is not activated, showing activation dialog");
     return showActivationDialog();
   }
 
@@ -138,6 +127,50 @@ void LicenseHandler::handleVersionCheck(QString &versionUrl)
   } else {
     versionUrl.append("/personal");
   }
+}
+
+bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
+{
+  using namespace synergy::gui;
+  using namespace deskflow::gui;
+
+  if (m_settings.activated()) {
+    qDebug("license is activated, starting core");
+    return true;
+  }
+
+  if (m_license.serialKey().isOffline) {
+    qDebug("offline serial key, starting core");
+    return true;
+  }
+
+  disconnect(&m_activator, &LicenseActivator::activationFailed, this, nullptr);
+  connect(&m_activator, &LicenseActivator::activationFailed, [this](const QString &message) {
+    QString fullMessage = QString("<p>There was a problem activating your license.</p>"
+                                  R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
+                                  "and provide the following information:</p>"
+                                  "%3")
+                              .arg(kUrlContact)
+                              .arg(kColorSecondary)
+                              .arg(message);
+    QMessageBox::critical(m_mainWindow, "Activation failed", fullMessage);
+  });
+
+  disconnect(&m_activator, &LicenseActivator::activationSucceeded, this, nullptr);
+  connect(&m_activator, &LicenseActivator::activationSucceeded, [this, coreProcess] {
+    qDebug("license activation succeeded, saving settings");
+    m_settings.setActivated(true);
+    m_settings.save();
+
+    qDebug("resuming core process after activation");
+    coreProcess->start();
+  });
+
+  qDebug("online serial key, activating");
+  const auto serialKey = QString::fromStdString(m_license.serialKey().hexString);
+  m_activator.activate({serialKey, m_appConfig->serverGroupChecked()});
+
+  return false;
 }
 
 bool LicenseHandler::loadSettings()
@@ -290,12 +323,6 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
 
   const auto oldSerialKey = m_license.serialKey();
   m_license = license;
-
-  if (!m_license.serialKey().isOffline) {
-    qDebug("online serial key, activating");
-    m_activator.activate({hexString, m_appConfig->serverGroupChecked()});
-    return kActivating;
-  }
 
   // This delayed check logic seems really complex. Is it really worth the maintenance and testing cost?
   // Condition must run *after* the license member is set, since it's async callback uses this member.

@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "gui/core/CoreProcess.h"
 #include "synergy/gui/AppTime.h"
 #include "synergy/gui/license/LicenseActivator.h"
 #include "synergy/gui/license/LicenseSettings.h"
@@ -46,8 +47,7 @@ public:
     kFatal,
     kUnchanged,
     kInvalid,
-    kExpired,
-    kActivating
+    kExpired
   };
 
   explicit LicenseHandler();
@@ -64,6 +64,7 @@ public:
       QRadioButton *userScope
   ) const;
   void handleVersionCheck(QString &versionUrl);
+  bool handleCoreStart(deskflow::gui::CoreProcess *coreProcess);
   bool loadSettings();
   void saveSettings();
   const License &license() const;
@@ -71,10 +72,6 @@ public:
   QString productName() const;
   SetSerialKeyResult setLicense(const QString &hexString, bool allowExpired = false);
   void clampFeatures(bool enableTlsIfAvailable);
-
-signals:
-  void activationFailed(const QString &message);
-  void activationSucceeded();
 
 private:
   void checkTlsCheckBox(QDialog *parent, QCheckBox *checkBoxEnableTls, bool showDialog) const;

@@ -55,6 +55,16 @@ void LicenseSettings::load()
   } else {
     qDebug("no serial key found in settings");
   }
+
+  if (m_pSystemSettings->contains(kActivatedSettingKey)) {
+    qDebug("loading activated value from system settings");
+    m_activated = m_pSystemSettings->value(kActivatedSettingKey).toBool();
+  } else if (m_pUserSettings->contains(kActivatedSettingKey)) {
+    qDebug("loading activated value from user settings");
+    m_activated = m_pUserSettings->value(kActivatedSettingKey).toBool();
+  } else {
+    qDebug("no activated value found in settings");
+  }
 }
 
 void LicenseSettings::save()

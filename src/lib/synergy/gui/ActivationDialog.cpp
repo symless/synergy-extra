@@ -42,7 +42,6 @@ ActivationDialog::ActivationDialog(QWidget *parent, AppConfig &appConfig, Licens
       m_pAppConfig(&appConfig),
       m_licenseHandler(licenseHandler)
 {
-
   m_ui->setupUi(this);
 
   m_ui->m_pLabelNotice->setStyleSheet(kStyleNoticeLabel);
@@ -52,9 +51,6 @@ ActivationDialog::ActivationDialog(QWidget *parent, AppConfig &appConfig, Licens
   if (!m_licenseHandler.license().isExpired()) {
     m_ui->m_widgetNotice->hide();
   }
-
-  connect(&m_licenseHandler, &LicenseHandler::activationSucceeded, this, &QDialog::accept);
-  connect(&m_licenseHandler, &LicenseHandler::activationFailed, this, &ActivationDialog::showErrorDialog);
 }
 
 void ActivationDialog::refreshSerialKey()
@@ -111,12 +107,6 @@ void ActivationDialog::accept()
   }
 
   const auto result = m_licenseHandler.setLicense(serialKey);
-  if (result == Result::kActivating) {
-    qInfo("activating license");
-    m_ui->m_pLabelNotice->setText("Activating...");
-    return;
-  }
-
   if (result != Result::kSuccess) {
     showResultDialog(result);
     return;
@@ -191,7 +181,7 @@ void ActivationDialog::showSuccessDialog()
 
 void ActivationDialog::showErrorDialog(const QString &message)
 {
-  QString fullMessage = QString("<p>There was a problem activating Deskflow.</p>"
+  QString fullMessage = QString("<p>There was a problem with your serial key.</p>"
                                 R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
                                 "and provide the following information:</p>"
                                 "%3")

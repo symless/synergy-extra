@@ -25,9 +25,13 @@
 #include <QMainWindow>
 #include <QRadioButton>
 
+namespace deskflow::gui {
+class CoreProcess;
+}
+
 namespace synergy::hooks {
 
-inline bool onStart(QMainWindow *parent, AppConfig *appConfig)
+inline bool onAppStart(QMainWindow *parent, AppConfig *appConfig)
 {
   if (synergy::gui::license::isActivationEnabled()) {
     qDebug("license activation enabled");
@@ -58,6 +62,11 @@ inline void onVersionCheck(QString &versionUrl)
     qDebug("license activation disabled");
     versionUrl = QString(SYNERGY_EDITION_TYPE);
   }
+}
+
+inline bool onCoreStart(deskflow::gui::CoreProcess *coreProcess)
+{
+  return LicenseHandler::instance().handleCoreStart(coreProcess);
 }
 
 } // namespace synergy::hooks

@@ -29,7 +29,7 @@ namespace synergy::gui::license {
 
 QString activateUrl()
 {
-  const auto envVar = qEnvironmentVariable("SYNERGY_FAKE_API_URL_ACTIVATE");
+  const auto envVar = qEnvironmentVariable("SYNERGY_TEST_API_URL_ACTIVATE");
   return envVar.isEmpty() ? kUrlApiLicenseActivate : envVar;
 }
 
@@ -68,7 +68,7 @@ void LicenseActivator::handleResponse(QNetworkReply *reply)
   }
 
   qDebug().noquote() << "activation response:" << response;
-  const auto jsonDoc = QJsonDocument::fromJson(reply->readAll());
+  const auto jsonDoc = QJsonDocument::fromJson(response);
   if (response.isNull()) {
     qWarning("empty activation response");
     Q_EMIT activationFailed("License activation failed, the server sent an empty response.");
@@ -105,18 +105,18 @@ void LicenseActivator::handleResponse(QNetworkReply *reply)
 QByteArray LicenseActivator::getRequestData(Data activateData)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-  QString guid(QSysInfo::machineUniqueId());
+  QString uuid(QSysInfo::machineUniqueId());
 #else
-  QString guid;
+  QString uuid;
 #endif
 
-  if (guid.isEmpty()) {
+  if (uuid.isEmpty()) {
     qFatal("failed to get machine unique id");
   }
 
   QJsonObject requestData;
-  requestData["guid"] = guid;
-  requestData["guidType"] = "system";
+  requestData["uuid"] = uuid;
+  requestData["uuidType"] = "System";
   requestData["serialKey"] = activateData.serialKey;
   requestData["isServer"] = activateData.isServer;
 

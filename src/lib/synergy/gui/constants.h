@@ -24,7 +24,7 @@ namespace synergy::gui {
 const auto kProProductName = "Synergy 1 Pro";
 const auto kBusinessProductName = "Synergy 1 Business";
 
-const auto kUrlApi = "https://symless.com/apix";
+const auto kUrlApi = "https://symless.com/api";
 const auto kUrlWebsite = DESKFLOW_WEBSITE_URL;
 const auto kUrlSourceQuery = "source=gui";
 
@@ -36,6 +36,6 @@ const auto kUrlPurchase = QString("%1/purchase?%2").arg(kUrlWebsite, kUrlSourceQ
 const auto kUrlPersonalUpgrade = QString("%1/purchase/upgrade?%2").arg(kUrlWebsite, kUrlSourceQuery);
 const auto kUrlContact = QString("%1/contact?%2").arg(kUrlWebsite, kUrlSourceQuery);
 
-const auto kUrlApiLicenseActivate = QString("%1/activate").arg(kUrlApi);
+const auto kUrlApiLicenseActivate = QString("%1/product/activate").arg(kUrlApi);
 
 } // namespace synergy::gui
