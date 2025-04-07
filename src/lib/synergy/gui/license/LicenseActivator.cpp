@@ -107,19 +107,13 @@ void LicenseActivator::handleResponse(QNetworkReply *reply)
 
 QByteArray LicenseActivator::getRequestData(Data activateData)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-  QString uuid(QSysInfo::machineUniqueId());
-#else
-  QString uuid;
-#endif
-
-  if (uuid.isEmpty()) {
-    qFatal("failed to get machine unique id");
+  const QString machineId = QSysInfo::machineUniqueId();
+  if (machineId.isEmpty()) {
+    qFatal("cannot create activation request, no machine id");
   }
 
   QJsonObject requestData;
-  requestData["uuid"] = uuid;
-  requestData["uuidType"] = "System";
+  requestData["machineId"] = machineId;
   requestData["serialKey"] = activateData.serialKey;
   requestData["isServer"] = activateData.isServer;
 
