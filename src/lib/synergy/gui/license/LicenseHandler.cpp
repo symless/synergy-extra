@@ -45,10 +45,17 @@ using License = synergy::license::License;
 
 LicenseHandler::LicenseHandler()
 {
+  m_enabled = synergy::gui::license::isActivationEnabled();
 }
 
 bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
 {
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping start handler");
+    parent->setWindowTitle(SYNERGY_PRODUCT_NAME);
+    return true;
+  }
+
   m_mainWindow = parent;
   m_appConfig = appConfig;
 
@@ -95,6 +102,10 @@ void LicenseHandler::handleSettings(
     QRadioButton *userScope
 ) const
 {
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping settings handler");
+    return;
+  }
 
   const auto onTlsToggle = [this, parent, enableTls] {
     qDebug("tls checkbox toggled");
@@ -121,6 +132,11 @@ void LicenseHandler::handleSettings(
 
 void LicenseHandler::handleVersionCheck(QString &versionUrl)
 {
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping version check handler");
+    return;
+  }
+
   const auto edition = license().productEdition();
   if (edition == Product::Edition::kBusiness) {
     versionUrl.append("/business");
@@ -135,7 +151,7 @@ bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
   using namespace deskflow::gui;
 
   if (!m_enabled) {
-    qDebug("license handler is disabled, starting core");
+    qDebug("license handler disabled, skipping core start handler");
     return true;
   }
 
