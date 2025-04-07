@@ -81,10 +81,10 @@ void LicenseActivator::handleResponse(QNetworkReply *reply)
     const auto status = json["status"].toString();
     const auto message = json["message"].toString();
 
-    if (status.isEmpty()) {
-      qWarning("activation status was empty");
-    } else {
+    if (!status.isEmpty()) {
       qWarning().noquote() << "activation status:" << status;
+    } else {
+      qWarning("activation status was empty");
     }
 
     if (!message.isEmpty()) {

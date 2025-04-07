@@ -168,7 +168,7 @@ bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
     coreProcess->start();
   });
 
-  qDebug("online serial key, activating");
+  qInfo("activating license");
   const auto serialKey = QString::fromStdString(m_license.serialKey().hexString);
   m_activator.activate({serialKey, m_appConfig->serverGroupChecked()});
 
