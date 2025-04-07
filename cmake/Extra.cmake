@@ -20,6 +20,7 @@ macro(configure_extra)
   endif()
 
   include_directories("${SYNERGY_EXTRA_ROOT}/src/lib")
+  include_directories("${PROJECT_BINARY_DIR}/synergy/lib")
 
   configure_meta()
   configure_dist()
@@ -32,6 +33,8 @@ macro(configure_gui_hook)
 
   set(DESKFLOW_GUI_HOOK_HEADER "synergy/hooks/gui_hook.h")
   set(DESKFLOW_GUI_HOOK_LIB "synergy-gui")
+
+  add_definitions(-DDESKFLOW_GUI_HOOK_HEADER="${DESKFLOW_GUI_HOOK_HEADER}")
 
   set(DESKFLOW_GUI_HOOK_APP_START
     "if (!synergy::hooks::onAppStart(&mainWindow, &appConfig)) return 0;"
@@ -47,6 +50,12 @@ macro(configure_gui_hook)
   set(DESKFLOW_GUI_HOOK_CORE_START
     "if (!synergy::hooks::onCoreStart(this)) return;"
   )
+  set(DESKFLOW_GUI_HOOK_TEST_START
+    "synergy::hooks::onTestStart();"
+  )
+
+  configure_file(${SYNERGY_EXTRA_ROOT}/src/lib/synergy/hooks/gui_hook_config.h.in
+                 ${PROJECT_BINARY_DIR}/synergy/lib/synergy/hooks/gui_hook_config.h)
 
 endmacro()
 

@@ -134,6 +134,19 @@ bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
   using namespace synergy::gui;
   using namespace deskflow::gui;
 
+  if (!m_enabled) {
+    qDebug("license handler is disabled, starting core");
+    return true;
+  }
+
+  if (m_appConfig == nullptr) {
+    qFatal("app config not set");
+  }
+
+  if (m_mainWindow == nullptr) {
+    qFatal("main window not set");
+  }
+
   if (m_settings.activated()) {
     qDebug("license is activated, starting core");
     return true;
@@ -386,4 +399,10 @@ void LicenseHandler::clampFeatures(bool enableTlsIfAvailable)
 
   qDebug("committing default feature settings");
   m_appConfig->commit();
+}
+
+void LicenseHandler::disable()
+{
+  qDebug("disabling license handler");
+  m_enabled = false;
 }

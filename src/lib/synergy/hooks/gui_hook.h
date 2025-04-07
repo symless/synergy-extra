@@ -19,6 +19,7 @@
 
 #include "synergy/gui/license/LicenseHandler.h"
 #include "synergy/gui/license/license_utils.h"
+#include "synergy/hooks/gui_hook_config.h" // IWYU pragma: keep
 
 #include <QCheckBox>
 #include <QDialog>
@@ -67,6 +68,11 @@ inline void onVersionCheck(QString &versionUrl)
 inline bool onCoreStart(deskflow::gui::CoreProcess *coreProcess)
 {
   return LicenseHandler::instance().handleCoreStart(coreProcess);
+}
+
+inline void onTestStart()
+{
+  LicenseHandler::instance().disable();
 }
 
 } // namespace synergy::hooks

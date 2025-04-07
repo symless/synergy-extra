@@ -72,6 +72,7 @@ public:
   QString productName() const;
   SetSerialKeyResult setLicense(const QString &hexString, bool allowExpired = false);
   void clampFeatures(bool enableTlsIfAvailable);
+  void disable();
 
 private:
   void checkTlsCheckBox(QDialog *parent, QCheckBox *checkBoxEnableTls, bool showDialog) const;
@@ -89,4 +90,5 @@ private:
   AppConfig *m_appConfig = nullptr;
   synergy::gui::AppTime m_time;
   synergy::gui::license::LicenseActivator m_activator;
+  bool m_enabled = true;
 };
