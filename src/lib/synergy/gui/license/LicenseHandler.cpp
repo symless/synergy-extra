@@ -145,19 +145,21 @@ bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
   }
 
   disconnect(&m_activator, &LicenseActivator::activationFailed, this, nullptr);
-  connect(&m_activator, &LicenseActivator::activationFailed, [this](const QString &message) {
-    QString fullMessage = QString("<p>There was a problem activating your license.</p>"
-                                  R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
-                                  "and provide the following information:</p>"
-                                  "%3")
+  connect(&m_activator, &LicenseActivator::activationFailed, this, [this](const QString &message) {
+    QString fullMessage = QString(
+                              "<p>There was a problem activating your license.</p>"
+                              R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
+                              "and let us know this message:</p>"
+                              "%3"
+    )
                               .arg(kUrlContact)
                               .arg(kColorSecondary)
                               .arg(message);
-    QMessageBox::critical(m_mainWindow, "Activation failed", fullMessage);
+    QMessageBox::warning(m_mainWindow, "Activation failed", fullMessage);
   });
 
   disconnect(&m_activator, &LicenseActivator::activationSucceeded, this, nullptr);
-  connect(&m_activator, &LicenseActivator::activationSucceeded, [this, coreProcess] {
+  connect(&m_activator, &LicenseActivator::activationSucceeded, this, [this, coreProcess] {
     qDebug("license activation succeeded, saving settings");
     m_settings.setActivated(true);
     m_settings.save();

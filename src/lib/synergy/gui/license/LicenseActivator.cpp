@@ -87,10 +87,12 @@ void LicenseActivator::handleResponse(QNetworkReply *reply)
       qWarning().noquote() << "activation status:" << status;
     }
 
-    if (message.isEmpty()) {
-      Q_EMIT activationFailed("License activation failed, the server sent an empty message.");
-    } else {
+    if (!message.isEmpty()) {
+      qWarning().noquote() << "activation message:" << message;
       Q_EMIT activationFailed(message);
+    } else {
+      qWarning("activation message was empty");
+      Q_EMIT activationFailed("License activation failed, unknown error.");
     }
 
     reply->deleteLater();
