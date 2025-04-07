@@ -53,6 +53,7 @@ void LicenseActivator::handleResponse(QNetworkReply *reply)
 {
   if (!reply) {
     qWarning("no activation reply");
+    Q_EMIT activationFailed("License activation failed, empty network reply.");
     return;
   }
 
