@@ -82,7 +82,7 @@ SerialKey parseV1(const std::string &hexString, const Parts &parts)
     throw InvalidSerialKeyFormat();
   }
 
-  // e.g.: {v1;basic;name;1;email;company;1398297600;1398384000}
+  // e.g.: {v1;basic;name;seats;email;company;1398297600;1398384000}
   SerialKey serialKey(hexString);
   serialKey.product = Product(parts.at(1));
   serialKey.warnTime = parseDate(parts.at(6));
@@ -96,7 +96,7 @@ SerialKey parseV2(const std::string &hexString, const Parts &parts)
   if (parts.size() < 9) {
     throw InvalidSerialKeyFormat();
   }
-  // e.g.: {v2;trial;basic;name;1;email;company;1398297600;1398384000}
+  // e.g.: {v2;trial;basic;name;seats;email;company;1398297600;1398384000}
   SerialKey serialKey(hexString);
   serialKey.type = SerialKeyType(parts.at(1));
   serialKey.product = Product(parts.at(2));
@@ -111,7 +111,7 @@ SerialKey parseV3(const std::string &hexString, const Parts &parts)
   if (parts.size() < 10) {
     throw InvalidSerialKeyFormat();
   }
-  // e.g.: {v3;offline;trial;basic;name;1;email;company;1398297600;1398384000}
+  // e.g.: {v3;offline;trial;basic;name;seats;email;company;1398297600;1398384000}
   SerialKey serialKey(hexString);
   serialKey.isOffline = (parts.at(1) == "offline");
   serialKey.type = SerialKeyType(parts.at(2));
