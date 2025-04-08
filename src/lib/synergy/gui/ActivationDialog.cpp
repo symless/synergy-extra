@@ -131,8 +131,10 @@ void ActivationDialog::showResultDialog(LicenseHandler::SetSerialKeyResult resul
   case kInvalid:
     QMessageBox::critical(
         this, title,
-        QString("Invalid serial key. "
-                R"(Please <a href="%1" style="color: %2">contact us</a> for help.)")
+        QString(
+            "Invalid serial key. "
+            R"(Please <a href="%1" style="color: %2">contact us</a> for help.)"
+        )
             .arg(kUrlContact)
             .arg(kColorSecondary)
     );
@@ -141,8 +143,10 @@ void ActivationDialog::showResultDialog(LicenseHandler::SetSerialKeyResult resul
   case kExpired:
     QMessageBox::warning(
         this, title,
-        QString("Sorry, that serial key has expired. "
-                R"(Please <a href="%1" style="color: %2">renew</a> your license.)")
+        QString(
+            "Sorry, that serial key has expired. "
+            R"(Please <a href="%1" style="color: %2">renew</a> your license.)"
+        )
             .arg(kUrlPurchase)
             .arg(kColorSecondary)
     );
@@ -181,10 +185,12 @@ void ActivationDialog::showSuccessDialog()
 
 void ActivationDialog::showErrorDialog(const QString &message)
 {
-  QString fullMessage = QString("<p>There was a problem with your serial key.</p>"
-                                R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
-                                "and provide the following information:</p>"
-                                "%3")
+  QString fullMessage = QString(
+                            "<p>There was a problem with your serial key.</p>"
+                            R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
+                            "and provide the following information:</p>"
+                            "%3"
+  )
                             .arg(kUrlContact)
                             .arg(kColorSecondary)
                             .arg(message);

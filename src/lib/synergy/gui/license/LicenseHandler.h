@@ -91,4 +91,5 @@ private:
   synergy::gui::AppTime m_time;
   synergy::gui::license::LicenseActivator m_activator;
   bool m_enabled = true;
+  deskflow::gui::CoreProcess *m_coreProcess = nullptr;
 };

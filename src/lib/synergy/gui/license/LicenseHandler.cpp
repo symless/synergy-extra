@@ -150,6 +150,8 @@ bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
   using namespace synergy::gui;
   using namespace deskflow::gui;
 
+  m_coreProcess = coreProcess;
+
   if (!m_enabled) {
     qDebug("license handler disabled, skipping core start handler");
     return true;
@@ -237,6 +239,11 @@ bool LicenseHandler::showActivationDialog()
     saveSettings();
     updateWindowTitle();
     clampFeatures(true);
+
+    if (m_coreProcess != nullptr && m_coreProcess->isStarted()) {
+      qDebug("restarting core on activation dialog accept");
+      m_coreProcess->restart();
+    }
 
     qDebug("license activation dialog accepted");
     return true;
@@ -372,6 +379,10 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
     qDebug("serial key did not change, ignoring");
     return kUnchanged;
   }
+
+  // Reset activation when the serial key changes so new key can be activated on key change.
+  m_settings.setActivated(false);
+  m_settings.save();
 
   return kSuccess;
 }
