@@ -34,6 +34,11 @@ public:
   {
     QString serialKey;
     bool isServer;
+    QString machineId;
+    QString appVersion;
+    QString osName;
+    QString hostname;
+    QString computerName;
   };
 
   explicit LicenseActivator();

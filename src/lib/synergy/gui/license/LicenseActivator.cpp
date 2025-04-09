@@ -107,8 +107,7 @@ void LicenseActivator::handleResponse(QNetworkReply *reply)
 
 QByteArray LicenseActivator::getRequestData(Data activateData)
 {
-  const QString machineId = QSysInfo::machineUniqueId();
-  if (machineId.isEmpty()) {
+  if (activateData.machineId.isEmpty()) {
     qFatal("cannot create activation request, no machine id");
   }
 
@@ -116,10 +115,30 @@ QByteArray LicenseActivator::getRequestData(Data activateData)
     qFatal("cannot create activation request, no serial key");
   }
 
+  if (activateData.appVersion.isEmpty()) {
+    qFatal("cannot create activation request, no app version");
+  }
+
+  if (activateData.osName.isEmpty()) {
+    qFatal("cannot create activation request, no os name");
+  }
+
+  if (activateData.hostname.isEmpty()) {
+    qFatal("cannot create activation request, no hostname");
+  }
+
+  if (activateData.computerName.isEmpty()) {
+    qFatal("cannot create activation request, no computer name");
+  }
+
   QJsonObject requestData;
-  requestData["machineId"] = machineId;
+  requestData["machineId"] = activateData.machineId;
   requestData["serialKey"] = activateData.serialKey;
   requestData["isServer"] = activateData.isServer;
+  requestData["appVersion"] = activateData.appVersion;
+  requestData["osName"] = activateData.osName;
+  requestData["hostname"] = activateData.hostname;
+  requestData["computerName"] = activateData.computerName;
 
   return QJsonDocument(requestData).toJson();
 }

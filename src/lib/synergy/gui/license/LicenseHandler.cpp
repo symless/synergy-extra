@@ -18,6 +18,7 @@
 #include "LicenseHandler.h"
 
 #include "ActivationDialog.h"
+#include "common/constants.h"
 #include "dialogs/UpgradeDialog.h"
 #include "gui/config/AppConfig.h"
 #include "gui/core/CoreProcess.h"
@@ -218,8 +219,16 @@ bool LicenseHandler::handleCoreStart()
   });
 
   qInfo("activating license");
+
+  const QString machineId = QSysInfo::machineUniqueId();
+  const auto isServer = m_appConfig->serverGroupChecked();
   const auto serialKey = QString::fromStdString(m_license.serialKey().hexString);
-  m_activator.activate({serialKey, m_appConfig->serverGroupChecked()});
+  const auto osName = QSysInfo::prettyProductName();
+  const auto appVersion = kVersion;
+  const auto hostname = QHostInfo::localHostName();
+  const auto computerName = m_appConfig->screenName();
+
+  m_activator.activate({serialKey, isServer, machineId, appVersion, osName, hostname, computerName});
 
   return false;
 }
