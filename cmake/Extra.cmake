@@ -36,8 +36,11 @@ macro(configure_gui_hook)
 
   add_definitions(-DDESKFLOW_GUI_HOOK_HEADER="${DESKFLOW_GUI_HOOK_HEADER}")
 
+  set(DESKFLOW_GUI_HOOK_MAIN_WINDOW
+    "synergy::hooks::onMainWindow(this, &m_AppConfig, &m_CoreProcess);"
+  )
   set(DESKFLOW_GUI_HOOK_APP_START
-    "if (!synergy::hooks::onAppStart(&mainWindow, &appConfig)) return 0;"
+    "if (!synergy::hooks::onAppStart()) return 0;"
   )
   set(DESKFLOW_GUI_HOOK_SETTINGS
     "synergy::hooks::onSettings(\
@@ -48,7 +51,7 @@ macro(configure_gui_hook)
     "synergy::hooks::onVersionCheck(url);"
   )
   set(DESKFLOW_GUI_HOOK_CORE_START
-    "if (!synergy::hooks::onCoreStart(this)) return;"
+    "if (!synergy::hooks::onCoreStart()) return;"
   )
   set(DESKFLOW_GUI_HOOK_TEST_START
     "synergy::hooks::onTestStart();"

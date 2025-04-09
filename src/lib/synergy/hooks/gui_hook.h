@@ -31,9 +31,14 @@ class CoreProcess;
 
 namespace synergy::hooks {
 
-inline bool onAppStart(QMainWindow *parent, AppConfig *appConfig)
+inline void onMainWindow(QMainWindow *mainWindow, AppConfig *appConfig, deskflow::gui::CoreProcess *coreProcess)
 {
-  return LicenseHandler::instance().handleStart(parent, appConfig);
+  LicenseHandler::instance().handleMainWindow(mainWindow, appConfig, coreProcess);
+}
+
+inline bool onAppStart()
+{
+  return LicenseHandler::instance().handleAppStart();
 }
 
 inline void onSettings(
@@ -49,9 +54,9 @@ inline void onVersionCheck(QString &versionUrl)
   return LicenseHandler::instance().handleVersionCheck(versionUrl);
 }
 
-inline bool onCoreStart(deskflow::gui::CoreProcess *coreProcess)
+inline bool onCoreStart()
 {
-  return LicenseHandler::instance().handleCoreStart(coreProcess);
+  return LicenseHandler::instance().handleCoreStart();
 }
 
 inline void onTestStart()

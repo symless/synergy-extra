@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "gui/core/CoreProcess.h"
 #include "synergy/gui/AppTime.h"
 #include "synergy/gui/license/LicenseActivator.h"
 #include "synergy/gui/license/LicenseSettings.h"
@@ -29,6 +28,10 @@ class QMainWindow;
 class QDialog;
 class QCheckBox;
 class QRadioButton;
+
+namespace deskflow::gui {
+class CoreProcess;
+}
 
 /**
  * @brief A convenience wrapper for `License` that provides Qt signals, etc.
@@ -58,13 +61,14 @@ public:
     return instance;
   }
 
-  bool handleStart(QMainWindow *parent, AppConfig *appConfig);
+  void handleMainWindow(QMainWindow *mainWindow, AppConfig *appConfig, deskflow::gui::CoreProcess *coreProcess);
+  bool handleAppStart();
   void handleSettings(
       QDialog *parent, QCheckBox *enableTls, QCheckBox *invertConnection, QRadioButton *systemScope,
       QRadioButton *userScope
   ) const;
   void handleVersionCheck(QString &versionUrl);
-  bool handleCoreStart(deskflow::gui::CoreProcess *coreProcess);
+  bool handleCoreStart();
   bool loadSettings();
   void saveSettings();
   const License &license() const;

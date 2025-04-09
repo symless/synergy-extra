@@ -20,6 +20,7 @@
 #include "ActivationDialog.h"
 #include "dialogs/UpgradeDialog.h"
 #include "gui/config/AppConfig.h"
+#include "gui/core/CoreProcess.h"
 #include "gui/styles.h"
 #include "synergy/gui/constants.h"
 #include "synergy/gui/license/license_utils.h"
@@ -48,16 +49,24 @@ LicenseHandler::LicenseHandler()
   m_enabled = synergy::gui::license::isActivationEnabled();
 }
 
-bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
+void LicenseHandler::handleMainWindow(
+    QMainWindow *mainWindow, AppConfig *appConfig, deskflow::gui::CoreProcess *coreProcess
+)
+{
+  qDebug("main window create handled");
+
+  m_mainWindow = mainWindow;
+  m_appConfig = appConfig;
+  m_coreProcess = coreProcess;
+}
+
+bool LicenseHandler::handleAppStart()
 {
   if (!m_enabled) {
     qDebug("license handler disabled, skipping start handler");
-    parent->setWindowTitle(SYNERGY_PRODUCT_NAME);
+    m_mainWindow->setWindowTitle(SYNERGY_PRODUCT_NAME);
     return true;
   }
-
-  m_mainWindow = parent;
-  m_appConfig = appConfig;
 
   if (m_mainWindow == nullptr) {
     qFatal("main window not set");
@@ -69,12 +78,12 @@ bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
 
   updateWindowTitle();
 
-  const auto serialKeyAction = new QAction("Change serial key", parent);
+  const auto serialKeyAction = new QAction("Change serial key", m_mainWindow);
   QObject::connect(serialKeyAction, &QAction::triggered, [this] { showActivationDialog(); });
 
   const auto licenseMenu = new QMenu("License");
   licenseMenu->addAction(serialKeyAction);
-  parent->menuBar()->addAction(licenseMenu->menuAction());
+  m_mainWindow->menuBar()->addAction(licenseMenu->menuAction());
 
   if (!loadSettings()) {
     qCritical("failed to load license settings");
@@ -145,12 +154,10 @@ void LicenseHandler::handleVersionCheck(QString &versionUrl)
   }
 }
 
-bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
+bool LicenseHandler::handleCoreStart()
 {
   using namespace synergy::gui;
   using namespace deskflow::gui;
-
-  m_coreProcess = coreProcess;
 
   if (!m_enabled) {
     qDebug("license handler disabled, skipping core start handler");
@@ -163,6 +170,10 @@ bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
 
   if (m_mainWindow == nullptr) {
     qFatal("main window not set");
+  }
+
+  if (m_coreProcess == nullptr) {
+    qFatal("core process not set");
   }
 
   if (m_settings.activated()) {
@@ -190,13 +201,13 @@ bool LicenseHandler::handleCoreStart(deskflow::gui::CoreProcess *coreProcess)
   });
 
   disconnect(&m_activator, &LicenseActivator::activationSucceeded, this, nullptr);
-  connect(&m_activator, &LicenseActivator::activationSucceeded, this, [this, coreProcess] {
+  connect(&m_activator, &LicenseActivator::activationSucceeded, this, [this] {
     qDebug("license activation succeeded, saving settings");
     m_settings.setActivated(true);
     m_settings.save();
 
     qDebug("resuming core process after activation");
-    coreProcess->start();
+    m_coreProcess->start();
   });
 
   qInfo("activating license");
