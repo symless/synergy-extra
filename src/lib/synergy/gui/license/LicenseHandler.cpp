@@ -88,7 +88,7 @@ bool LicenseHandler::handleAppStart()
   updateWindowTitle();
 
   const auto serialKeyAction = new QAction("Change serial key", m_mainWindow);
-  QObject::connect(serialKeyAction, &QAction::triggered, [this] { showActivationDialog(); });
+  QObject::connect(serialKeyAction, &QAction::triggered, [this] { showSerialKeyDialog(); });
 
   const auto licenseMenu = new QMenu("License");
   licenseMenu->addAction(serialKeyAction);
@@ -96,12 +96,12 @@ bool LicenseHandler::handleAppStart()
 
   if (m_license.isExpired()) {
     qWarning("license is expired, showing activation dialog");
-    return showActivationDialog();
+    return showSerialKeyDialog();
   }
 
   if (!m_license.isValid()) {
     qDebug("license not valid, showing activation dialog");
-    return showActivationDialog();
+    return showSerialKeyDialog();
   }
 
   qDebug("license is valid, continuing with start");
@@ -202,6 +202,9 @@ bool LicenseHandler::handleCoreStart()
                               .arg(kColorSecondary)
                               .arg(message);
     QMessageBox::warning(m_mainWindow, "Activation failed", fullMessage);
+
+    qWarning("activation failed, showing serial key dialog");
+    return showSerialKeyDialog();
   });
 
   disconnect(&m_activator, &LicenseActivator::activationSucceeded, this, nullptr);
@@ -232,7 +235,7 @@ bool LicenseHandler::loadSettings()
     const auto result = setLicense(m_settings.serialKey(), true);
     if (result != kSuccess && result != kUnchanged) {
       qWarning("set serial key failed, showing activation dialog");
-      return showActivationDialog();
+      return showSerialKeyDialog();
     }
   }
 
@@ -246,7 +249,7 @@ void LicenseHandler::saveSettings()
   m_settings.save();
 }
 
-bool LicenseHandler::showActivationDialog()
+bool LicenseHandler::showSerialKeyDialog()
 {
   ActivationDialog dialog(m_mainWindow, *m_appConfig, *this);
   const auto result = dialog.exec();
@@ -256,14 +259,14 @@ bool LicenseHandler::showActivationDialog()
     clampFeatures(true);
 
     if (m_coreProcess != nullptr && m_coreProcess->isStarted()) {
-      qDebug("restarting core on activation dialog accept");
+      qDebug("restarting core on serial key dialog accept");
       m_coreProcess->restart();
     }
 
-    qDebug("license activation dialog accepted");
+    qDebug("license serial key dialog accepted");
     return true;
   } else {
-    qWarning("license activation dialog declined");
+    qWarning("license serial key dialog declined");
     return false;
   }
 }
@@ -406,13 +409,13 @@ void LicenseHandler::validate()
 {
   if (!m_license.isValid()) {
     qDebug("license validation failed, license invalid");
-    showActivationDialog();
+    showSerialKeyDialog();
     return;
   }
 
   if (m_license.isExpired()) {
     qDebug("license validation failed, license expired");
-    showActivationDialog();
+    showSerialKeyDialog();
     return;
   }
 

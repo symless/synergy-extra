@@ -85,7 +85,7 @@ private:
       QDialog *parent, QRadioButton *systemScope, QRadioButton *userScope, bool showDialog
   ) const;
   void updateWindowTitle() const;
-  bool showActivationDialog();
+  bool showSerialKeyDialog();
   void validate();
 
   License m_license = License::invalid();
