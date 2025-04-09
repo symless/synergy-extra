@@ -36,6 +36,9 @@ using namespace deskflow::gui;
 using namespace synergy::gui;
 using namespace synergy::license;
 
+const QString successTitle = "Serial key";
+const QString problemTitle = "Serial key problem";
+
 ActivationDialog::ActivationDialog(QWidget *parent, AppConfig &appConfig, LicenseHandler &licenseHandler)
     : QDialog(parent),
       m_ui(new Ui::ActivationDialog),
@@ -118,19 +121,21 @@ void ActivationDialog::accept()
 
 void ActivationDialog::showResultDialog(LicenseHandler::SetSerialKeyResult result)
 {
-  const QString title = "Activation";
-
   switch (result) {
     using enum LicenseHandler::SetSerialKeyResult;
 
   case kUnchanged:
-    QMessageBox::information(this, title, "Heads up, the serial key you entered was the same as last time.");
+    QMessageBox::information(
+        this, successTitle,
+        "Heads up, the serial key you entered is valid but was the same as last time. "
+        "Perhaps you intended to enter a different serial key."
+    );
     QDialog::accept();
     break;
 
   case kInvalid:
-    QMessageBox::critical(
-        this, title,
+    QMessageBox::warning(
+        this, problemTitle,
         QString(
             "Invalid serial key. "
             R"(Please <a href="%1" style="color: %2">contact us</a> for help.)"
@@ -142,7 +147,7 @@ void ActivationDialog::showResultDialog(LicenseHandler::SetSerialKeyResult resul
 
   case kExpired:
     QMessageBox::warning(
-        this, title,
+        this, problemTitle,
         QString(
             "Sorry, that serial key has expired. "
             R"(Please <a href="%1" style="color: %2">renew</a> your license.)"
@@ -161,13 +166,13 @@ void ActivationDialog::showSuccessDialog()
 {
   const auto &license = m_licenseHandler.license();
 
-  QString title = "Activation successful";
-  QString message = tr("<p>Thanks for activating %1.</p>").arg(m_licenseHandler.productName());
+  QString title = successTitle;
+  QString message = tr("<p>Thanks for entering your serial key for %1.</p>").arg(m_licenseHandler.productName());
 
   const auto tlsAvailable = m_licenseHandler.license().isTlsAvailable();
   if (tlsAvailable && m_pAppConfig->tlsEnabled()) {
     message += "<p>To ensure that TLS encryption works correctly, "
-               "please activate all of your computers with the same serial key.</p>";
+               "please use same serial key on all of your computers.</p>";
   }
 
   if (license.isTimeLimited()) {
@@ -194,5 +199,5 @@ void ActivationDialog::showErrorDialog(const QString &message)
                             .arg(kUrlContact)
                             .arg(kColorSecondary)
                             .arg(message);
-  QMessageBox::critical(this, "Activation failed", fullMessage);
+  QMessageBox::warning(this, problemTitle, fullMessage);
 }
