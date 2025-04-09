@@ -53,11 +53,20 @@ void LicenseHandler::handleMainWindow(
     QMainWindow *mainWindow, AppConfig *appConfig, deskflow::gui::CoreProcess *coreProcess
 )
 {
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping main window handler");
+    return;
+  }
+
   qDebug("main window create handled");
 
   m_mainWindow = mainWindow;
   m_appConfig = appConfig;
   m_coreProcess = coreProcess;
+
+  if (!loadSettings()) {
+    qFatal("failed to load license settings");
+  }
 }
 
 bool LicenseHandler::handleAppStart()
@@ -84,11 +93,6 @@ bool LicenseHandler::handleAppStart()
   const auto licenseMenu = new QMenu("License");
   licenseMenu->addAction(serialKeyAction);
   m_mainWindow->menuBar()->addAction(licenseMenu->menuAction());
-
-  if (!loadSettings()) {
-    qCritical("failed to load license settings");
-    return false;
-  }
 
   if (m_license.isExpired()) {
     qWarning("license is expired, showing activation dialog");

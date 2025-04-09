@@ -112,6 +112,10 @@ QByteArray LicenseActivator::getRequestData(Data activateData)
     qFatal("cannot create activation request, no machine id");
   }
 
+  if (activateData.serialKey.isEmpty()) {
+    qFatal("cannot create activation request, no serial key");
+  }
+
   QJsonObject requestData;
   requestData["machineId"] = machineId;
   requestData["serialKey"] = activateData.serialKey;
