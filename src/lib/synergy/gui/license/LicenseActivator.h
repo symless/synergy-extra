@@ -32,13 +32,12 @@ class LicenseActivator : public QObject
 public:
   struct Data
   {
+    QString machineSignature;
+    QString hostnameSignature;
     QString serialKey;
-    bool isServer;
-    QString machineId;
     QString appVersion;
     QString osName;
-    QString hostname;
-    QString computerName;
+    bool isServer;
   };
 
   explicit LicenseActivator();

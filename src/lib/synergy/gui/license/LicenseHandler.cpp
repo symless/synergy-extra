@@ -30,6 +30,7 @@
 #include <QAction>
 #include <QCheckBox>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 #include <QDebug>
 #include <QDialog>
 #include <QMainWindow>
@@ -220,15 +221,20 @@ bool LicenseHandler::handleCoreStart()
 
   qInfo("activating license");
 
-  const QString machineId = QSysInfo::machineUniqueId();
-  const auto isServer = m_appConfig->serverGroupChecked();
+  const auto machineId = QSysInfo::machineUniqueId();
+  const auto hostname = QHostInfo::localHostName();
+
+  // Protect the customer by anonymizing the machine ID and hostname so that if leaked accidentally,
+  // the information cannot be used as an attack vector on the customer by a bad actor.
+  const QString machineSignature = QCryptographicHash::hash(machineId, QCryptographicHash::Sha256).toHex();
+  const auto hostnameSignature = QCryptographicHash::hash(hostname.toUtf8(), QCryptographicHash::Sha256).toHex();
+
   const auto serialKey = QString::fromStdString(m_license.serialKey().hexString);
   const auto osName = QSysInfo::prettyProductName();
   const auto appVersion = kVersion;
-  const auto hostname = QHostInfo::localHostName();
-  const auto computerName = m_appConfig->screenName();
+  const auto isServer = m_appConfig->serverGroupChecked();
 
-  m_activator.activate({serialKey, isServer, machineId, appVersion, osName, hostname, computerName});
+  m_activator.activate({machineSignature, hostnameSignature, serialKey, appVersion, osName, isServer});
 
   return false;
 }
