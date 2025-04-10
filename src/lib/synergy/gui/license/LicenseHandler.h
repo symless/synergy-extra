@@ -88,12 +88,12 @@ private:
   bool showSerialKeyDialog();
   void validate();
 
+  bool m_enabled = true;
+  synergy::gui::AppTime m_time;
   License m_license = License::invalid();
   synergy::gui::license::LicenseSettings m_settings;
-  QMainWindow *m_mainWindow = nullptr;
-  AppConfig *m_appConfig = nullptr;
-  synergy::gui::AppTime m_time;
   synergy::gui::license::LicenseActivator m_activator;
-  bool m_enabled = true;
-  deskflow::gui::CoreProcess *m_coreProcess = nullptr;
+  QMainWindow *m_pMainWindow = nullptr;
+  AppConfig *m_pAppConfig = nullptr;
+  deskflow::gui::CoreProcess *m_pCoreProcess = nullptr;
 };

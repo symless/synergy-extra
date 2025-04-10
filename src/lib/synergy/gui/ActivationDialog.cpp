@@ -115,6 +115,7 @@ void ActivationDialog::accept()
     return;
   }
 
+  m_serialKeyChanged = true;
   showSuccessDialog();
   QDialog::accept();
 }

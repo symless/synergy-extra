@@ -40,6 +40,8 @@ LicenseActivator::LicenseActivator()
 
 void LicenseActivator::activate(Data activateData)
 {
+  m_isBusy = true;
+
   const auto url = QUrl(activateUrl());
   qDebug().noquote() << "activating with url:" << url.toString();
 
@@ -51,6 +53,8 @@ void LicenseActivator::activate(Data activateData)
 
 void LicenseActivator::handleResponse(QNetworkReply *reply)
 {
+  m_isBusy = false;
+
   if (!reply) {
     qWarning("no activation reply");
     Q_EMIT activationFailed("License activation failed, empty network reply.");
@@ -100,7 +104,7 @@ void LicenseActivator::handleResponse(QNetworkReply *reply)
     return;
   }
 
-  qDebug().noquote() << "activation succeeded";
+  qInfo().noquote() << "activation successful";
   Q_EMIT activationSucceeded();
   reply->deleteLater();
 }

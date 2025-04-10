@@ -44,6 +44,11 @@ public:
 
   void activate(Data activateData);
 
+  bool isBusy()
+  {
+    return m_isBusy;
+  }
+
 signals:
   void activationFailed(const QString &message);
   void activationSucceeded();
@@ -55,6 +60,7 @@ private:
   QByteArray getRequestData(Data activateData);
 
   QNetworkAccessManager m_manager;
+  bool m_isBusy = false;
 };
 
 } // namespace synergy::gui::license
