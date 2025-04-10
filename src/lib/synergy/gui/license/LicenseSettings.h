@@ -19,6 +19,7 @@
 
 #include <QSettings>
 #include <QString>
+#include <QUuid>
 
 namespace synergy::gui::license {
 
@@ -40,10 +41,20 @@ public:
     m_serialKey = serialKey;
   }
 
+  bool activated() const
+  {
+    return m_activated;
+  }
+  void setActivated(bool activated)
+  {
+    m_activated = activated;
+  }
+
 private:
-  QString m_serialKey;
   QSettings *m_pUserSettings;
   QSettings *m_pSystemSettings;
+  QString m_serialKey;
+  bool m_activated = false;
 };
 
 } // namespace synergy::gui::license

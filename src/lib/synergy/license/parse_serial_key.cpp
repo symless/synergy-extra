@@ -37,6 +37,7 @@ std::string decode(const std::string &hexString);
 Parts tokenize(const std::string &plainText);
 SerialKey parseV1(const std::string &hexString, const Parts &parts);
 SerialKey parseV2(const std::string &hexString, const Parts &parts);
+SerialKey parseV3(const std::string &hexString, const Parts &parts);
 std::optional<time_point> parseDate(const std::string &unixTimeString);
 
 SerialKey parseSerialKey(const std::string &hexString)
@@ -50,6 +51,8 @@ SerialKey parseSerialKey(const std::string &hexString)
     return parseV1(trimmed, parts);
   } else if (version == "v2") {
     return parseV2(trimmed, parts);
+  } else if (version == "v3") {
+    return parseV3(trimmed, parts);
   } else {
     throw InvalidSerialKeyVersion(version);
   }
@@ -79,7 +82,7 @@ SerialKey parseV1(const std::string &hexString, const Parts &parts)
     throw InvalidSerialKeyFormat();
   }
 
-  // e.g.: {v1;basic;name;1;email;company name;1398297600;1398384000}
+  // e.g.: {v1;basic;name;seats;email;company;1398297600;1398384000}
   SerialKey serialKey(hexString);
   serialKey.product = Product(parts.at(1));
   serialKey.warnTime = parseDate(parts.at(6));
@@ -93,12 +96,28 @@ SerialKey parseV2(const std::string &hexString, const Parts &parts)
   if (parts.size() < 9) {
     throw InvalidSerialKeyFormat();
   }
-  // e.g.: {v2;trial;basic;name;1;email;company name;1398297600;1398384000}
+  // e.g.: {v2;trial;basic;name;seats;email;company;1398297600;1398384000}
   SerialKey serialKey(hexString);
   serialKey.type = SerialKeyType(parts.at(1));
   serialKey.product = Product(parts.at(2));
   serialKey.warnTime = parseDate(parts.at(7));
   serialKey.expireTime = parseDate(parts.at(8));
+  serialKey.isValid = true;
+  return serialKey;
+}
+
+SerialKey parseV3(const std::string &hexString, const Parts &parts)
+{
+  if (parts.size() < 10) {
+    throw InvalidSerialKeyFormat();
+  }
+  // e.g.: {v3;offline;trial;basic;name;seats;email;company;1398297600;1398384000}
+  SerialKey serialKey(hexString);
+  serialKey.isOffline = (parts.at(1) == "offline");
+  serialKey.type = SerialKeyType(parts.at(2));
+  serialKey.product = Product(parts.at(3));
+  serialKey.warnTime = parseDate(parts.at(8));
+  serialKey.expireTime = parseDate(parts.at(9));
   serialKey.isValid = true;
   return serialKey;
 }

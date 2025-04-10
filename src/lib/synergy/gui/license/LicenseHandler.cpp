@@ -18,15 +18,19 @@
 #include "LicenseHandler.h"
 
 #include "ActivationDialog.h"
-#include "constants.h"
+#include "common/constants.h"
 #include "dialogs/UpgradeDialog.h"
 #include "gui/config/AppConfig.h"
+#include "gui/core/CoreProcess.h"
+#include "gui/styles.h"
+#include "synergy/gui/constants.h"
 #include "synergy/gui/license/license_utils.h"
 #include "synergy/license/Product.h"
 
 #include <QAction>
 #include <QCheckBox>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 #include <QDebug>
 #include <QDialog>
 #include <QMainWindow>
@@ -40,49 +44,103 @@
 
 using namespace std::chrono;
 using namespace synergy::gui::license;
+using namespace synergy::gui;
+using namespace deskflow::gui;
 using License = synergy::license::License;
 
-bool LicenseHandler::handleStart(QMainWindow *parent, AppConfig *appConfig)
+LicenseHandler::LicenseHandler()
 {
-  m_mainWindow = parent;
-  m_appConfig = appConfig;
+  m_enabled = synergy::gui::license::isActivationEnabled();
 
-  if (m_mainWindow == nullptr) {
+  connect(&m_activator, &LicenseActivator::activationFailed, this, [this](const QString &message) {
+    QString fullMessage = QString(
+                              "<p>There was a problem activating your license.</p>"
+                              R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
+                              "and let us know this message:</p>"
+                              "%3"
+    )
+                              .arg(kUrlContact)
+                              .arg(kColorSecondary)
+                              .arg(message);
+    QMessageBox::warning(m_pMainWindow, "Activation failed", fullMessage);
+
+    qWarning("activation failed, showing serial key dialog");
+    return showSerialKeyDialog();
+  });
+
+  connect(&m_activator, &LicenseActivator::activationSucceeded, this, [this] {
+    qDebug("license activation succeeded, saving settings");
+    m_settings.setActivated(true);
+    m_settings.save();
+
+    if (m_pCoreProcess == nullptr) {
+      qFatal("core process not set");
+    }
+
+    qDebug("resuming core process after activation");
+    m_pCoreProcess->start();
+  });
+}
+
+void LicenseHandler::handleMainWindow(
+    QMainWindow *mainWindow, AppConfig *appConfig, deskflow::gui::CoreProcess *coreProcess
+)
+{
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping main window handler");
+    return;
+  }
+
+  qDebug("main window create handled");
+
+  m_pMainWindow = mainWindow;
+  m_pAppConfig = appConfig;
+  m_pCoreProcess = coreProcess;
+
+  if (!loadSettings()) {
+    qFatal("failed to load license settings");
+  }
+}
+
+bool LicenseHandler::handleAppStart()
+{
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping start handler");
+    m_pMainWindow->setWindowTitle(SYNERGY_PRODUCT_NAME);
+    return true;
+  }
+
+  if (m_pMainWindow == nullptr) {
     qFatal("main window not set");
   }
 
-  if (m_appConfig == nullptr) {
+  if (m_pAppConfig == nullptr) {
     qFatal("app config not set");
   }
 
   updateWindowTitle();
 
-  const auto serialKeyAction = new QAction("Change serial key", parent);
-  QObject::connect(serialKeyAction, &QAction::triggered, [this] { showActivationDialog(); });
+  const auto serialKeyAction = new QAction("Change serial key", m_pMainWindow);
+  QObject::connect(serialKeyAction, &QAction::triggered, [this] { showSerialKeyDialog(); });
 
   const auto licenseMenu = new QMenu("License");
   licenseMenu->addAction(serialKeyAction);
-  parent->menuBar()->addAction(licenseMenu->menuAction());
-
-  if (!loadSettings()) {
-    qCritical("failed to load license settings");
-    return false;
-  }
+  m_pMainWindow->menuBar()->addAction(licenseMenu->menuAction());
 
   if (m_license.isExpired()) {
     qWarning("license is expired, showing activation dialog");
-    return showActivationDialog();
+    return showSerialKeyDialog();
   }
 
-  if (m_license.isValid()) {
-    qDebug("license is valid, continuing with start");
-    updateWindowTitle();
-    clampFeatures(false);
-    return true;
+  if (!m_license.isValid()) {
+    qDebug("license not valid, showing activation dialog");
+    return showSerialKeyDialog();
   }
 
-  qDebug("license not valid, showing activation dialog");
-  return showActivationDialog();
+  qDebug("license is valid, continuing with start");
+  updateWindowTitle();
+  clampFeatures(false);
+  return true;
 }
 
 void LicenseHandler::handleSettings(
@@ -90,6 +148,10 @@ void LicenseHandler::handleSettings(
     QRadioButton *userScope
 ) const
 {
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping settings handler");
+    return;
+  }
 
   const auto onTlsToggle = [this, parent, enableTls] {
     qDebug("tls checkbox toggled");
@@ -116,12 +178,73 @@ void LicenseHandler::handleSettings(
 
 void LicenseHandler::handleVersionCheck(QString &versionUrl)
 {
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping version check handler");
+    return;
+  }
+
   const auto edition = license().productEdition();
   if (edition == Product::Edition::kBusiness) {
     versionUrl.append("/business");
   } else {
     versionUrl.append("/personal");
   }
+}
+
+bool LicenseHandler::handleCoreStart()
+{
+  // HACK: For some reason, the core start trigger gets called twice when clicking the 'start' button.
+  // If the activator is called twice in quick succession, the core is started twice.
+  if (m_activator.isBusy()) {
+    qDebug("activator is busy, skipping core start handler");
+    return false;
+  }
+
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping core start handler");
+    return true;
+  }
+
+  if (m_pAppConfig == nullptr) {
+    qFatal("app config not set");
+  }
+
+  if (m_pMainWindow == nullptr) {
+    qFatal("main window not set");
+  }
+
+  if (m_pCoreProcess == nullptr) {
+    qFatal("core process not set");
+  }
+
+  if (m_settings.activated()) {
+    qDebug("license is activated, starting core");
+    return true;
+  }
+
+  if (m_license.serialKey().isOffline) {
+    qDebug("offline serial key, starting core");
+    return true;
+  }
+
+  qInfo("activating license");
+
+  const auto machineId = QSysInfo::machineUniqueId();
+  const auto hostname = QHostInfo::localHostName();
+
+  // Protect the customer by anonymizing the machine ID and hostname so that if leaked accidentally,
+  // the information cannot be used as an attack vector on the customer by a bad actor.
+  const QString machineSignature = QCryptographicHash::hash(machineId, QCryptographicHash::Sha256).toHex();
+  const auto hostnameSignature = QCryptographicHash::hash(hostname.toUtf8(), QCryptographicHash::Sha256).toHex();
+
+  const auto serialKey = QString::fromStdString(m_license.serialKey().hexString);
+  const auto osName = QSysInfo::prettyProductName();
+  const auto appVersion = kVersion;
+  const auto isServer = m_pAppConfig->serverGroupChecked();
+
+  m_activator.activate({machineSignature, hostnameSignature, serialKey, appVersion, osName, isServer});
+
+  return false;
 }
 
 bool LicenseHandler::loadSettings()
@@ -135,7 +258,7 @@ bool LicenseHandler::loadSettings()
     const auto result = setLicense(m_settings.serialKey(), true);
     if (result != kSuccess && result != kUnchanged) {
       qWarning("set serial key failed, showing activation dialog");
-      return showActivationDialog();
+      return showSerialKeyDialog();
     }
   }
 
@@ -149,19 +272,24 @@ void LicenseHandler::saveSettings()
   m_settings.save();
 }
 
-bool LicenseHandler::showActivationDialog()
+bool LicenseHandler::showSerialKeyDialog()
 {
-  ActivationDialog dialog(m_mainWindow, *m_appConfig, *this);
+  ActivationDialog dialog(m_pMainWindow, *m_pAppConfig, *this);
   const auto result = dialog.exec();
   if (result == QDialog::Accepted) {
     saveSettings();
     updateWindowTitle();
     clampFeatures(true);
 
-    qDebug("license activation dialog accepted");
+    if (dialog.serialKeyChanged() && m_pCoreProcess->isStarted()) {
+      qDebug("restarting core on serial key change");
+      m_pCoreProcess->restart();
+    }
+
+    qDebug("license serial key dialog accepted");
     return true;
   } else {
-    qWarning("license activation dialog declined");
+    qWarning("license serial key dialog declined");
     return false;
   }
 }
@@ -170,7 +298,7 @@ void LicenseHandler::updateWindowTitle() const
 {
   const auto productName = QString::fromStdString(m_license.productName());
   qDebug("updating main window title: %s", qPrintable(productName));
-  m_mainWindow->setWindowTitle(productName);
+  m_pMainWindow->setWindowTitle(productName);
 }
 
 void LicenseHandler::checkTlsCheckBox(QDialog *parent, QCheckBox *checkBoxEnableTls, bool showDialog) const
@@ -272,15 +400,11 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
     return kExpired;
   }
 
-  // Condition must run *just before* the license member is set.
-  if (serialKey == m_license.serialKey()) {
-    qDebug("serial key did not change, ignoring");
-    return kUnchanged;
-  }
-
+  const auto oldSerialKey = m_license.serialKey();
   m_license = license;
 
-  // Condition must run *after* the license member is set.
+  // This delayed check logic seems really complex. Is it really worth the maintenance and testing cost?
+  // Condition must run *after* the license member is set, since it's async callback uses this member.
   if (!m_license.isExpired() && m_license.isTimeLimited()) {
     auto secondsLeft = m_license.secondsLeft();
     if (secondsLeft.count() < INT_MAX) {
@@ -292,6 +416,15 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
     }
   }
 
+  if (serialKey == oldSerialKey) {
+    qDebug("serial key did not change, ignoring");
+    return kUnchanged;
+  }
+
+  // Reset activation when the serial key changes so new key can be activated on key change.
+  m_settings.setActivated(false);
+  m_settings.save();
+
   return kSuccess;
 }
 
@@ -299,13 +432,13 @@ void LicenseHandler::validate()
 {
   if (!m_license.isValid()) {
     qDebug("license validation failed, license invalid");
-    showActivationDialog();
+    showSerialKeyDialog();
     return;
   }
 
   if (m_license.isExpired()) {
     qDebug("license validation failed, license expired");
-    showActivationDialog();
+    showSerialKeyDialog();
     return;
   }
 
@@ -316,22 +449,28 @@ void LicenseHandler::clampFeatures(bool enableTlsIfAvailable)
 {
   if (enableTlsIfAvailable && m_license.isTlsAvailable()) {
     qDebug("tls available, enabling tls");
-    m_appConfig->setTlsEnabled(true);
-  } else if (m_appConfig->tlsEnabled() && !m_license.isTlsAvailable()) {
+    m_pAppConfig->setTlsEnabled(true);
+  } else if (m_pAppConfig->tlsEnabled() && !m_license.isTlsAvailable()) {
     qWarning("tls not available, disabling tls");
-    m_appConfig->setTlsEnabled(false);
+    m_pAppConfig->setTlsEnabled(false);
   }
 
-  if (m_appConfig->invertConnection() && !m_license.isInvertConnectionAvailable()) {
+  if (m_pAppConfig->invertConnection() && !m_license.isInvertConnectionAvailable()) {
     qWarning("invert connection not available, disabling invert connection");
-    m_appConfig->setInvertConnection(false);
+    m_pAppConfig->setInvertConnection(false);
   }
 
-  if (m_appConfig->isActiveScopeSystem() && !m_license.isSettingsScopeAvailable()) {
+  if (m_pAppConfig->isActiveScopeSystem() && !m_license.isSettingsScopeAvailable()) {
     qWarning("settings scope not available, disabling system scope");
-    m_appConfig->setLoadFromSystemScope(false);
+    m_pAppConfig->setLoadFromSystemScope(false);
   }
 
   qDebug("committing default feature settings");
-  m_appConfig->commit();
+  m_pAppConfig->commit();
+}
+
+void LicenseHandler::disable()
+{
+  qDebug("disabling license handler");
+  m_enabled = false;
 }

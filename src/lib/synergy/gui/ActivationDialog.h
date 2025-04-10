@@ -43,6 +43,11 @@ public:
     }
   };
 
+  bool serialKeyChanged() const
+  {
+    return m_serialKeyChanged;
+  }
+
 public slots:
   void reject() override;
   void accept() override;
@@ -58,4 +63,5 @@ private:
   Ui::ActivationDialog *m_ui;
   AppConfig *m_pAppConfig;
   LicenseHandler &m_licenseHandler;
+  bool m_serialKeyChanged = false;
 };

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Activate Synergy</string>
+   <string>Serial key</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -22,7 +22,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Serial key</string>
+      <string>Enter your serial key</string>
      </property>
     </widget>
    </item>

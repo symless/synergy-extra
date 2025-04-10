@@ -18,6 +18,7 @@
 #pragma once
 
 #include "synergy/gui/AppTime.h"
+#include "synergy/gui/license/LicenseActivator.h"
 #include "synergy/gui/license/LicenseSettings.h"
 #include "synergy/license/License.h"
 #include "synergy/license/Product.h"
@@ -27,6 +28,10 @@ class QMainWindow;
 class QDialog;
 class QCheckBox;
 class QRadioButton;
+
+namespace deskflow::gui {
+class CoreProcess;
+}
 
 /**
  * @brief A convenience wrapper for `License` that provides Qt signals, etc.
@@ -45,8 +50,10 @@ public:
     kFatal,
     kUnchanged,
     kInvalid,
-    kExpired,
+    kExpired
   };
+
+  explicit LicenseHandler();
 
   static LicenseHandler &instance()
   {
@@ -54,12 +61,14 @@ public:
     return instance;
   }
 
-  bool handleStart(QMainWindow *parent, AppConfig *appConfig);
+  void handleMainWindow(QMainWindow *mainWindow, AppConfig *appConfig, deskflow::gui::CoreProcess *coreProcess);
+  bool handleAppStart();
   void handleSettings(
       QDialog *parent, QCheckBox *enableTls, QCheckBox *invertConnection, QRadioButton *systemScope,
       QRadioButton *userScope
   ) const;
   void handleVersionCheck(QString &versionUrl);
+  bool handleCoreStart();
   bool loadSettings();
   void saveSettings();
   const License &license() const;
@@ -67,6 +76,7 @@ public:
   QString productName() const;
   SetSerialKeyResult setLicense(const QString &hexString, bool allowExpired = false);
   void clampFeatures(bool enableTlsIfAvailable);
+  void disable();
 
 private:
   void checkTlsCheckBox(QDialog *parent, QCheckBox *checkBoxEnableTls, bool showDialog) const;
@@ -75,12 +85,15 @@ private:
       QDialog *parent, QRadioButton *systemScope, QRadioButton *userScope, bool showDialog
   ) const;
   void updateWindowTitle() const;
-  bool showActivationDialog();
+  bool showSerialKeyDialog();
   void validate();
 
+  bool m_enabled = true;
+  synergy::gui::AppTime m_time;
   License m_license = License::invalid();
   synergy::gui::license::LicenseSettings m_settings;
-  QMainWindow *m_mainWindow = nullptr;
-  AppConfig *m_appConfig = nullptr;
-  synergy::gui::AppTime m_time;
+  synergy::gui::license::LicenseActivator m_activator;
+  QMainWindow *m_pMainWindow = nullptr;
+  AppConfig *m_pAppConfig = nullptr;
+  deskflow::gui::CoreProcess *m_pCoreProcess = nullptr;
 };

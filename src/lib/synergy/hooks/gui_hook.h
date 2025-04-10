@@ -1,6 +1,6 @@
 /*
  * Synergy -- mouse and keyboard sharing utility
- * Copyright (C) 2024 Symless Ltd.
+ * Copyright (C) 2024 - 2025 Symless Ltd.
  *
  * This package is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,25 +18,27 @@
 #pragma once
 
 #include "synergy/gui/license/LicenseHandler.h"
-#include "synergy/gui/license/license_utils.h"
+#include "synergy/hooks/gui_hook_config.h" // IWYU pragma: keep
 
 #include <QCheckBox>
 #include <QDialog>
 #include <QMainWindow>
 #include <QRadioButton>
 
+namespace deskflow::gui {
+class CoreProcess;
+}
+
 namespace synergy::hooks {
 
-inline bool onStart(QMainWindow *parent, AppConfig *appConfig)
+inline void onMainWindow(QMainWindow *mainWindow, AppConfig *appConfig, deskflow::gui::CoreProcess *coreProcess)
 {
-  if (synergy::gui::license::isActivationEnabled()) {
-    qDebug("license activation enabled");
-    return LicenseHandler::instance().handleStart(parent, appConfig);
-  } else {
-    qDebug("license activation disabled");
-    parent->setWindowTitle(SYNERGY_PRODUCT_NAME);
-    return true;
-  }
+  LicenseHandler::instance().handleMainWindow(mainWindow, appConfig, coreProcess);
+}
+
+inline bool onAppStart()
+{
+  return LicenseHandler::instance().handleAppStart();
 }
 
 inline void onSettings(
@@ -44,20 +46,22 @@ inline void onSettings(
     QRadioButton *userScope
 )
 {
-  if (synergy::gui::license::isActivationEnabled()) {
-    return LicenseHandler::instance().handleSettings(parent, enableTls, invertConnection, systemScope, userScope);
-  }
+  LicenseHandler::instance().handleSettings(parent, enableTls, invertConnection, systemScope, userScope);
 }
 
 inline void onVersionCheck(QString &versionUrl)
 {
-  if (synergy::gui::license::isActivationEnabled()) {
-    qDebug("license activation enabled");
-    return LicenseHandler::instance().handleVersionCheck(versionUrl);
-  } else {
-    qDebug("license activation disabled");
-    versionUrl = QString(SYNERGY_EDITION_TYPE);
-  }
+  return LicenseHandler::instance().handleVersionCheck(versionUrl);
+}
+
+inline bool onCoreStart()
+{
+  return LicenseHandler::instance().handleCoreStart();
+}
+
+inline void onTestStart()
+{
+  LicenseHandler::instance().disable();
 }
 
 } // namespace synergy::hooks

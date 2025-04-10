@@ -20,6 +20,7 @@ macro(configure_extra)
   endif()
 
   include_directories("${SYNERGY_EXTRA_ROOT}/src/lib")
+  include_directories("${PROJECT_BINARY_DIR}/synergy/lib")
 
   configure_meta()
   configure_dist()
@@ -33,8 +34,13 @@ macro(configure_gui_hook)
   set(DESKFLOW_GUI_HOOK_HEADER "synergy/hooks/gui_hook.h")
   set(DESKFLOW_GUI_HOOK_LIB "synergy-gui")
 
-  set(DESKFLOW_GUI_HOOK_START
-    "if (!synergy::hooks::onStart(&mainWindow, &appConfig)) { return 0; }"
+  add_definitions(-DDESKFLOW_GUI_HOOK_HEADER="${DESKFLOW_GUI_HOOK_HEADER}")
+
+  set(DESKFLOW_GUI_HOOK_MAIN_WINDOW
+    "synergy::hooks::onMainWindow(this, &m_AppConfig, &m_CoreProcess);"
+  )
+  set(DESKFLOW_GUI_HOOK_APP_START
+    "if (!synergy::hooks::onAppStart()) return 0;"
   )
   set(DESKFLOW_GUI_HOOK_SETTINGS
     "synergy::hooks::onSettings(\
@@ -44,6 +50,15 @@ macro(configure_gui_hook)
   set(DESKFLOW_GUI_HOOK_VERSION
     "synergy::hooks::onVersionCheck(url);"
   )
+  set(DESKFLOW_GUI_HOOK_CORE_START
+    "if (!synergy::hooks::onCoreStart()) return;"
+  )
+  set(DESKFLOW_GUI_HOOK_TEST_START
+    "synergy::hooks::onTestStart();"
+  )
+
+  configure_file(${SYNERGY_EXTRA_ROOT}/src/lib/synergy/hooks/gui_hook_config.h.in
+                 ${PROJECT_BINARY_DIR}/synergy/lib/synergy/hooks/gui_hook_config.h)
 
 endmacro()
 
