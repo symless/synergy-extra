@@ -277,6 +277,14 @@ bool LicenseHandler::showSerialKeyDialog()
   ActivationDialog dialog(m_pMainWindow, *m_pAppConfig, *this);
   const auto result = dialog.exec();
   if (result == QDialog::Accepted) {
+
+    if (dialog.serialKeyChanged()) {
+      // Reset activation so new serial key can be activated.
+      qDebug("serial key changed, updating settings");
+      m_settings.setActivated(false);
+      m_settings.save();
+    }
+
     saveSettings();
     updateWindowTitle();
     clampFeatures(true);
@@ -420,10 +428,6 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
     qDebug("serial key did not change, ignoring");
     return kUnchanged;
   }
-
-  // Reset activation when the serial key changes so new key can be activated on key change.
-  m_settings.setActivated(false);
-  m_settings.save();
 
   return kSuccess;
 }
