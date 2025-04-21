@@ -23,11 +23,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 
-option(SYNERGY_VERSION_CHECK "Enable version check" ON)
-if (SYNERGY_VERSION_CHECK)
-  add_definitions(-DSYNERGY_VERSION_CHECK)
-endif()
-
 if(WIN32)
   message(STATUS "Enabling warnings as errors (MSVC)")
   add_compile_options(/WX)

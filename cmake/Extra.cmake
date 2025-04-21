@@ -27,6 +27,12 @@ macro(configure_extra)
   configure_bin_names()
   configure_gui_hook()
 
+  option(SYNERGY_VERSION_CHECK "Enable version check" ON)
+  if (SYNERGY_VERSION_CHECK)
+    message(STATUS "Enabling version check")
+    add_definitions(-DSYNERGY_VERSION_CHECK)
+  endif()
+
 endmacro()
 
 macro(configure_gui_hook)
