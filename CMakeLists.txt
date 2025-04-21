@@ -25,6 +25,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 
 option(SYNERGY_VERSION_CHECK "Enable version check" ON)
 if (SYNERGY_VERSION_CHECK)
+  message(STATUS "Enabling version check")
   add_definitions(-DSYNERGY_VERSION_CHECK)
 endif()
 
