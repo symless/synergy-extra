@@ -18,8 +18,8 @@
 #pragma once
 
 #include "synergy/gui/AppTime.h"
+#include "synergy/gui/ExtraSettings.h"
 #include "synergy/gui/license/LicenseActivator.h"
-#include "synergy/gui/license/LicenseSettings.h"
 #include "synergy/license/License.h"
 #include "synergy/license/Product.h"
 
@@ -91,7 +91,7 @@ private:
   bool m_enabled = true;
   synergy::gui::AppTime m_time;
   License m_license = License::invalid();
-  synergy::gui::license::LicenseSettings m_settings;
+  synergy::gui::ExtraSettings m_settings;
   synergy::gui::license::LicenseActivator m_activator;
   QMainWindow *m_pMainWindow = nullptr;
   AppConfig *m_pAppConfig = nullptr;

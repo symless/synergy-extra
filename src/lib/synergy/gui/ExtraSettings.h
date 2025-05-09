@@ -17,18 +17,20 @@
 
 #pragma once
 
+#include "gui/config/Settings.h"
+
 #include <QSettings>
 #include <QString>
 #include <QUuid>
 
-namespace synergy::gui::license {
+namespace synergy::gui {
 
-class LicenseSettings : public QObject
+class ExtraSettings : public deskflow::gui::Settings
 {
   Q_OBJECT
 public:
-  LicenseSettings();
-  virtual ~LicenseSettings() = default;
+  ExtraSettings();
+  virtual ~ExtraSettings() = default;
   void load();
   void save();
 
@@ -51,10 +53,8 @@ public:
   }
 
 private:
-  QSettings *m_pUserSettings;
-  QSettings *m_pSystemSettings;
   QString m_serialKey;
   bool m_activated = false;
 };
 
-} // namespace synergy::gui::license
+} // namespace synergy::gui
