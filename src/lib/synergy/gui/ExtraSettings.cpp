@@ -34,7 +34,7 @@ void ExtraSettings::load()
   m_activated = settings.value(kActivatedSettingKey).toBool();
 }
 
-void ExtraSettings::save()
+void ExtraSettings::sync()
 {
   auto &settings = getActiveSettings();
   if (!settings.isWritable()) {

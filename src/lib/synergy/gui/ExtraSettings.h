@@ -32,7 +32,7 @@ public:
   ExtraSettings() = default;
   virtual ~ExtraSettings() = default;
   void load();
-  void save();
+  void sync();
 
   QString serialKey() const
   {

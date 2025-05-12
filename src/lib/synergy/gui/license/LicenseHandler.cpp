@@ -71,7 +71,7 @@ LicenseHandler::LicenseHandler()
   connect(&m_activator, &LicenseActivator::activationSucceeded, this, [this] {
     qDebug("license activation succeeded, saving settings");
     m_settings.setActivated(true);
-    m_settings.save();
+    m_settings.sync();
 
     if (m_pCoreProcess == nullptr) {
       qFatal("core process not set");
@@ -269,7 +269,7 @@ void LicenseHandler::saveSettings()
 {
   const auto hexString = m_license.serialKey().hexString;
   m_settings.setSerialKey(QString::fromStdString(hexString));
-  m_settings.save();
+  m_settings.sync();
 }
 
 bool LicenseHandler::showSerialKeyDialog()
@@ -296,7 +296,7 @@ bool LicenseHandler::showSerialKeyDialog()
     // Reset activation so new serial key can be activated.
     qDebug("serial key changed, updating settings");
     m_settings.setActivated(false);
-    m_settings.save();
+    m_settings.sync();
   }
 
   saveSettings();
