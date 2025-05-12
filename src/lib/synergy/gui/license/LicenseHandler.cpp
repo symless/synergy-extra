@@ -463,9 +463,8 @@ void LicenseHandler::clampFeatures(bool enableTlsIfAvailable)
     m_pAppConfig->setInvertConnection(false);
   }
 
-  if (m_pAppConfig->isActiveScopeSystem() && !m_license.isSettingsScopeAvailable()) {
-    qWarning("settings scope not available, disabling system scope");
-    m_pAppConfig->setLoadFromSystemScope(false);
+  if (m_pAppConfig->isSystemScope() && !m_license.isSettingsScopeAvailable()) {
+    qFatal("settings scope not available");
   }
 
   qDebug("committing default feature settings");
