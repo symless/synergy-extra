@@ -274,6 +274,17 @@ void LicenseHandler::saveSettings()
 
 bool LicenseHandler::showSerialKeyDialog()
 {
+  if (!m_settings.isWritable()) {
+    QMessageBox::warning(
+        m_pMainWindow, "Write access required",
+        tr("<p>The settings file is not writable:</p>"
+           "<p><code>%1</code></p>"
+           "<p>Please check the file permissions and try again.</p>")
+            .arg(m_settings.fileName())
+    );
+    return false;
+  }
+
   ActivationDialog dialog(m_pMainWindow, *m_pAppConfig, *this);
   const auto result = dialog.exec();
   if (result != QDialog::Accepted) {

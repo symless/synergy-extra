@@ -38,7 +38,7 @@ void ExtraSettings::save()
 {
   auto &settings = getActiveSettings();
   if (!settings.isWritable()) {
-    qCritical("unable to write to settings");
+    qCritical() << "unable to save to settings, file not writable:" << settings.fileName();
     return;
   }
 
