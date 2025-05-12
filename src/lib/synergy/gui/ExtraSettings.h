@@ -29,7 +29,7 @@ class ExtraSettings : public deskflow::gui::Settings
 {
   Q_OBJECT
 public:
-  ExtraSettings();
+  ExtraSettings() = default;
   virtual ~ExtraSettings() = default;
   void load();
   void save();

@@ -27,50 +27,24 @@ namespace synergy::gui {
 const auto kSerialKeySettingKey = "serialKey";
 const auto kActivatedSettingKey = "activated";
 
-ExtraSettings::ExtraSettings()
-{
-}
-
 void ExtraSettings::load()
 {
-  const auto &system = getSystemSettings();
-  const auto &user = getUserSettings();
-
-  if (system.contains(kSerialKeySettingKey)) {
-    m_serialKey = system.value(kSerialKeySettingKey).toString();
-  } else if (user.contains(kSerialKeySettingKey)) {
-    m_serialKey = user.value(kSerialKeySettingKey).toString();
-  } else {
-    qDebug("no serial key found in settings");
-  }
-
-  if (system.contains(kActivatedSettingKey)) {
-    m_activated = system.value(kActivatedSettingKey).toBool();
-  } else if (user.contains(kActivatedSettingKey)) {
-    m_activated = user.value(kActivatedSettingKey).toBool();
-  } else {
-    qDebug("no activation status found in settings");
-  }
+  const auto &settings = getActiveSettings();
+  m_serialKey = settings.value(kSerialKeySettingKey).toString();
+  m_activated = settings.value(kActivatedSettingKey).toBool();
 }
 
 void ExtraSettings::save()
 {
-  auto &system = getSystemSettings();
-  auto &user = getUserSettings();
-
-  if (system.isWritable()) {
-    qDebug("saving serial key to system settings");
-    system.setValue(kSerialKeySettingKey, m_serialKey);
-    system.setValue(kActivatedSettingKey, m_activated);
-    system.sync();
-  } else {
-    qDebug("not saving serial key to system settings, not writable");
+  auto &settings = getActiveSettings();
+  if (!settings.isWritable()) {
+    qCritical("unable to write to settings");
+    return;
   }
 
-  qDebug("saving serial key to user settings");
-  user.setValue(kSerialKeySettingKey, m_serialKey);
-  user.setValue(kActivatedSettingKey, m_activated);
-  user.sync();
+  settings.setValue(kSerialKeySettingKey, m_serialKey);
+  settings.setValue(kActivatedSettingKey, m_activated);
+  settings.sync();
 }
 
 } // namespace synergy::gui
