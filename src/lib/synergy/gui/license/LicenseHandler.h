@@ -78,12 +78,14 @@ public:
   void clampFeatures(bool enableTlsIfAvailable);
   void disable();
 
+  bool isEnabled() const
+  {
+    return m_enabled;
+  }
+
 private:
   void checkTlsCheckBox(QDialog *parent, QCheckBox *checkBoxEnableTls, bool showDialog) const;
   void checkInvertConnectionCheckBox(QDialog *parent, QCheckBox *checkBoxInvertConnection, bool showDialog) const;
-  void checkSettingsScopeRadioButton(
-      QDialog *parent, QRadioButton *systemScope, QRadioButton *userScope, bool showDialog
-  ) const;
   void updateWindowTitle() const;
   bool showSerialKeyDialog();
   void validate();
