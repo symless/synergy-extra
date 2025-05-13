@@ -71,7 +71,7 @@ LicenseHandler::LicenseHandler()
   connect(&m_activator, &LicenseActivator::activationSucceeded, this, [this] {
     qDebug("license activation succeeded, saving settings");
     m_settings.setActivated(true);
-    m_settings.save();
+    m_settings.sync();
 
     if (m_pCoreProcess == nullptr) {
       qFatal("core process not set");
@@ -269,11 +269,22 @@ void LicenseHandler::saveSettings()
 {
   const auto hexString = m_license.serialKey().hexString;
   m_settings.setSerialKey(QString::fromStdString(hexString));
-  m_settings.save();
+  m_settings.sync();
 }
 
 bool LicenseHandler::showSerialKeyDialog()
 {
+  if (!m_settings.isWritable()) {
+    QMessageBox::warning(
+        m_pMainWindow, "Write access required",
+        tr("<p>The settings file is not writable:</p>"
+           "<p><code>%1</code></p>"
+           "<p>Please check the file permissions and try again.</p>")
+            .arg(m_settings.fileName())
+    );
+    return false;
+  }
+
   ActivationDialog dialog(m_pMainWindow, *m_pAppConfig, *this);
   const auto result = dialog.exec();
   if (result != QDialog::Accepted) {
@@ -285,7 +296,7 @@ bool LicenseHandler::showSerialKeyDialog()
     // Reset activation so new serial key can be activated.
     qDebug("serial key changed, updating settings");
     m_settings.setActivated(false);
-    m_settings.save();
+    m_settings.sync();
   }
 
   saveSettings();
@@ -463,9 +474,8 @@ void LicenseHandler::clampFeatures(bool enableTlsIfAvailable)
     m_pAppConfig->setInvertConnection(false);
   }
 
-  if (m_pAppConfig->isActiveScopeSystem() && !m_license.isSettingsScopeAvailable()) {
-    qWarning("settings scope not available, disabling system scope");
-    m_pAppConfig->setLoadFromSystemScope(false);
+  if (m_pAppConfig->isSystemScope() && !m_license.isSettingsScopeAvailable()) {
+    qFatal("settings scope not available");
   }
 
   qDebug("committing default feature settings");
