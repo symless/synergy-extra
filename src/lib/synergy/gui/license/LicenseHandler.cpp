@@ -53,12 +53,10 @@ LicenseHandler::LicenseHandler()
   m_enabled = synergy::gui::license::isActivationEnabled();
 
   connect(&m_activator, &LicenseActivator::activationFailed, this, [this](const QString &message) {
-    QString fullMessage = QString(
-                              "<p>There was a problem activating your license.</p>"
-                              R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
-                              "and let us know this message:</p>"
-                              "%3"
-    )
+    QString fullMessage = QString("<p>There was a problem activating your license.</p>"
+                                  R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
+                                  "and let us know this message:</p>"
+                                  "%3")
                               .arg(kUrlContact)
                               .arg(kColorSecondary)
                               .arg(message);
@@ -154,26 +152,19 @@ void LicenseHandler::handleSettings(
   }
 
   const auto onTlsToggle = [this, parent, enableTls] {
-    qDebug("tls checkbox toggled");
+    qDebug("license handler, tls checkbox toggled");
     checkTlsCheckBox(parent, enableTls, true);
   };
   QObject::connect(enableTls, &QCheckBox::toggled, onTlsToggle);
 
   const auto onInvertConnectionToggle = [this, parent, invertConnection] {
-    qDebug("invert connection checkbox toggled");
+    qDebug("license handler, invert connection checkbox toggled");
     checkInvertConnectionCheckBox(parent, invertConnection, true);
   };
   QObject::connect(invertConnection, &QCheckBox::toggled, onInvertConnectionToggle);
 
-  const auto onSystemScopeToggle = [this, parent, systemScope, userScope] {
-    qDebug("system scope radio button toggled");
-    checkSettingsScopeRadioButton(parent, systemScope, userScope, true);
-  };
-  QObject::connect(systemScope, &QRadioButton::toggled, onSystemScopeToggle);
-
   checkTlsCheckBox(parent, enableTls, false);
   checkInvertConnectionCheckBox(parent, invertConnection, false);
-  checkSettingsScopeRadioButton(parent, systemScope, userScope, false);
 }
 
 void LicenseHandler::handleVersionCheck(QString &versionUrl)
@@ -350,25 +341,6 @@ void LicenseHandler::checkInvertConnectionCheckBox(
           QString("Invert Connection"),
           QString("Please upgrade to %1 to enable the invert connection feature.")
               .arg(synergy::gui::kBusinessProductName),
-          synergy::gui::kUrlContact
-      );
-    }
-  }
-}
-
-void LicenseHandler::checkSettingsScopeRadioButton(
-    QDialog *parent, QRadioButton *systemScope, QRadioButton *userScope, bool showDialog
-) const
-{
-  if (!m_license.isSettingsScopeAvailable() && systemScope->isChecked()) {
-    qDebug("settings scope not available, showing upgrade dialog");
-    userScope->setChecked(true);
-
-    if (showDialog) {
-      UpgradeDialog dialog(parent);
-      dialog.showDialog(
-          QString("Settings Scope"),
-          QString("Please upgrade to %1 to enable the settings scope feature.").arg(synergy::gui::kBusinessProductName),
           synergy::gui::kUrlContact
       );
     }

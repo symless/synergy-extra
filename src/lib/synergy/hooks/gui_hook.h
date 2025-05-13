@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "synergy/gui/FeatureHandler.h"
 #include "synergy/gui/license/LicenseHandler.h"
 #include "synergy/hooks/gui_hook_config.h" // IWYU pragma: keep
 
@@ -34,6 +35,7 @@ namespace synergy::hooks {
 inline void onMainWindow(QMainWindow *mainWindow, AppConfig *appConfig, deskflow::gui::CoreProcess *coreProcess)
 {
   LicenseHandler::instance().handleMainWindow(mainWindow, appConfig, coreProcess);
+  FeatureHandler::instance().handleMainWindow(appConfig);
 }
 
 inline bool onAppStart()
@@ -47,6 +49,7 @@ inline void onSettings(
 )
 {
   LicenseHandler::instance().handleSettings(parent, enableTls, invertConnection, systemScope, userScope);
+  FeatureHandler::instance().handleSettings(parent, systemScope, userScope);
 }
 
 inline void onVersionCheck(QString &versionUrl)
