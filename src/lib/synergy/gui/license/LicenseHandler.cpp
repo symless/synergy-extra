@@ -128,14 +128,9 @@ bool LicenseHandler::handleAppStart()
   licenseMenu->addAction(serialKeyAction);
   m_pMainWindow->menuBar()->addAction(licenseMenu->menuAction());
 
-  if (m_license.isExpired()) {
-    qWarning("license is expired, showing activation dialog");
-    return showSerialKeyDialog();
-  }
-
-  if (!m_license.isValid()) {
-    qDebug("license not valid, showing activation dialog");
-    return showSerialKeyDialog();
+  const auto checkResult = check();
+  if (!checkResult) {
+    return false;
   }
 
   qDebug("license is valid, continuing with start");
@@ -403,7 +398,7 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
     if (secondsLeft.count() < INT_MAX) {
       const auto validateAt = secondsLeft + seconds{1};
       const auto interval = duration_cast<milliseconds>(validateAt);
-      QTimer::singleShot(interval, this, &LicenseHandler::validate);
+      QTimer::singleShot(interval, this, &LicenseHandler::check);
     } else {
       qDebug("license expiry too distant to schedule timer");
     }
@@ -417,21 +412,23 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
   return kSuccess;
 }
 
-void LicenseHandler::validate()
+bool LicenseHandler::check()
 {
   if (!m_license.isValid()) {
     qDebug("license validation failed, license invalid");
-    showSerialKeyDialog();
-    return;
-  }
-
-  if (m_license.isExpired()) {
+    return showSerialKeyDialog();
+  } else if (m_license.isExpired()) {
     qDebug("license validation failed, license expired");
+    return showSerialKeyDialog();
+  } else if (m_license.isExpiringSoon()) {
+    qDebug("license is expiring soon, skipping activation dialog");
     showSerialKeyDialog();
-    return;
+    // Return true even if dialog cancelled, since expiring soon licenses are still valid.
+    return true;
+  } else {
+    qDebug("license validation succeeded");
+    return true;
   }
-
-  qDebug("license validation succeeded");
 }
 
 void LicenseHandler::clampFeatures(bool enableTlsIfAvailable)

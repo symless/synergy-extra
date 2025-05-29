@@ -50,10 +50,11 @@ ActivationDialog::ActivationDialog(QWidget *parent, AppConfig &appConfig, Licens
   m_ui->m_pLabelNotice->setStyleSheet(kStyleNoticeLabel);
 
   refreshSerialKey();
+}
 
-  if (!m_licenseHandler.license().isExpired()) {
-    m_ui->m_widgetNotice->hide();
-  }
+ActivationDialog::~ActivationDialog()
+{
+  delete m_ui;
 }
 
 void ActivationDialog::refreshSerialKey()
@@ -72,14 +73,43 @@ void ActivationDialog::refreshSerialKey()
   m_ui->m_pTextEditSerialKey->moveCursor(QTextCursor::End);
 
   const auto &license = m_licenseHandler.license();
-  if (license.isTimeLimited()) {
+  if (license.isTimeLimited() && (license.isExpired() || license.isExpiringSoon())) {
     m_ui->m_pLabelNotice->setText(licenseNotice(license));
+    m_ui->m_widgetNotice->show();
+  } else {
+    m_ui->m_widgetNotice->hide();
   }
 }
 
-ActivationDialog::~ActivationDialog()
+void ActivationDialog::showEvent(QShowEvent *event)
 {
-  delete m_ui;
+  QDialog::showEvent(event);
+
+  QTimer::singleShot(0, this, [this]() {
+    const auto &license = m_licenseHandler.license();
+    if (license.isTimeLimited()) {
+      const auto notice = licenseNotice(license);
+      if (license.isExpired()) {
+        QMessageBox::warning(
+            this, "License expired",
+            tr("%1"
+               "<p>The application will now stop working. Please renew your license today to continue using the "
+               "application.</p>"
+               "<p>Once you have received your new serial key, you can enter it on the next screen.</p>")
+                .arg(notice)
+        );
+      } else if (license.isExpiringSoon()) {
+        QMessageBox::warning(
+            this, "License expiring soon",
+            tr("%1"
+               "<p>If your license expires, the application will stop working. Please renew your license today to "
+               "avoid any interruptions.</p>"
+               "<p>Once you have received your new serial key, you can enter it on the next screen.</p>")
+                .arg(notice)
+        );
+      }
+    }
+  });
 }
 
 void ActivationDialog::reject()
@@ -110,6 +140,12 @@ void ActivationDialog::accept()
   }
 
   const auto result = m_licenseHandler.setLicense(serialKey);
+  if (result == Result::kUnchanged) {
+    qInfo() << "serial key did not change, nothing to do";
+    QDialog::accept();
+    return;
+  }
+
   if (result != Result::kSuccess) {
     showResultDialog(result);
     return;
@@ -124,15 +160,6 @@ void ActivationDialog::showResultDialog(LicenseHandler::SetSerialKeyResult resul
 {
   switch (result) {
     using enum LicenseHandler::SetSerialKeyResult;
-
-  case kUnchanged:
-    QMessageBox::information(
-        this, successTitle,
-        "Heads up, the serial key you entered is valid but was the same as last time. "
-        "Perhaps you intended to enter a different serial key."
-    );
-    QDialog::accept();
-    break;
 
   case kInvalid:
     QMessageBox::warning(
@@ -153,7 +180,7 @@ void ActivationDialog::showResultDialog(LicenseHandler::SetSerialKeyResult resul
             "Sorry, that serial key has expired. "
             R"(Please <a href="%1" style="color: %2">renew</a> your license.)"
         )
-            .arg(kUrlPurchase)
+            .arg(kUrlContact)
             .arg(kColorSecondary)
     );
     break;
