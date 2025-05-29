@@ -53,10 +53,12 @@ LicenseHandler::LicenseHandler()
   m_enabled = synergy::gui::license::isActivationEnabled();
 
   connect(&m_activator, &LicenseActivator::activationFailed, this, [this](const QString &message) {
-    QString fullMessage = QString("<p>There was a problem activating your license.</p>"
-                                  R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
-                                  "and let us know this message:</p>"
-                                  "%3")
+    QString fullMessage = QString(
+                              "<p>There was a problem activating your license.</p>"
+                              R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
+                              "and let us know this message:</p>"
+                              "%3"
+    )
                               .arg(kUrlContact)
                               .arg(kColorSecondary)
                               .arg(message);
@@ -84,16 +86,17 @@ void LicenseHandler::handleMainWindow(
     QMainWindow *mainWindow, AppConfig *appConfig, deskflow::gui::CoreProcess *coreProcess
 )
 {
+  // Must still be set as these are used when not enabled.
+  m_pMainWindow = mainWindow;
+  m_pAppConfig = appConfig;
+  m_pCoreProcess = coreProcess;
+
   if (!m_enabled) {
     qDebug("license handler disabled, skipping main window handler");
     return;
   }
 
   qDebug("main window create handled");
-
-  m_pMainWindow = mainWindow;
-  m_pAppConfig = appConfig;
-  m_pCoreProcess = coreProcess;
 
   if (!loadSettings()) {
     qFatal("failed to load license settings");
@@ -102,18 +105,19 @@ void LicenseHandler::handleMainWindow(
 
 bool LicenseHandler::handleAppStart()
 {
-  if (!m_enabled) {
-    qDebug("license handler disabled, skipping start handler");
-    m_pMainWindow->setWindowTitle(SYNERGY_PRODUCT_NAME);
-    return true;
-  }
-
   if (m_pMainWindow == nullptr) {
     qFatal("main window not set");
   }
 
   if (m_pAppConfig == nullptr) {
     qFatal("app config not set");
+  }
+
+  if (!m_enabled) {
+    qDebug("license handler disabled, skipping start handler");
+    // TODO: move this elsewhere
+    m_pMainWindow->setWindowTitle(SYNERGY_PRODUCT_NAME);
+    return true;
   }
 
   updateWindowTitle();
