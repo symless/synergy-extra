@@ -115,7 +115,6 @@ bool LicenseHandler::handleAppStart()
 
   if (!m_enabled) {
     qDebug("license handler disabled, skipping start handler");
-    // TODO: move this elsewhere
     m_pMainWindow->setWindowTitle(SYNERGY_PRODUCT_NAME);
     return true;
   }
