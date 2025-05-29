@@ -88,7 +88,7 @@ private:
   void checkInvertConnectionCheckBox(QDialog *parent, QCheckBox *checkBoxInvertConnection, bool showDialog) const;
   void updateWindowTitle() const;
   bool showSerialKeyDialog();
-  void validate();
+  bool check();
 
   bool m_enabled = true;
   synergy::gui::AppTime m_time;

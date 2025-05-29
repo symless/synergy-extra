@@ -59,6 +59,7 @@ private:
   void showResultDialog(LicenseHandler::SetSerialKeyResult result);
   void showSuccessDialog();
   void showErrorDialog(const QString &message);
+  void showEvent(QShowEvent *) override;
 
   Ui::ActivationDialog *m_ui;
   AppConfig *m_pAppConfig;
