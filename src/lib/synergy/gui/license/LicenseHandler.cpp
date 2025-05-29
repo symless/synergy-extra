@@ -135,7 +135,7 @@ bool LicenseHandler::handleAppStart()
 
   qDebug("license is valid, continuing with start");
   updateWindowTitle();
-  clampFeatures(false);
+  clampFeatures();
   return true;
 }
 
@@ -290,7 +290,7 @@ bool LicenseHandler::showSerialKeyDialog()
 
   saveSettings();
   updateWindowTitle();
-  clampFeatures(true);
+  clampFeatures();
 
   if (dialog.serialKeyChanged() && m_pCoreProcess->isStarted()) {
     qDebug("restarting core on serial key change");
@@ -431,12 +431,9 @@ bool LicenseHandler::check()
   }
 }
 
-void LicenseHandler::clampFeatures(bool enableTlsIfAvailable)
+void LicenseHandler::clampFeatures()
 {
-  if (enableTlsIfAvailable && m_license.isTlsAvailable()) {
-    qDebug("tls available, enabling tls");
-    m_pAppConfig->setTlsEnabled(true);
-  } else if (m_pAppConfig->tlsEnabled() && !m_license.isTlsAvailable()) {
+  if (m_pAppConfig->tlsEnabled() && !m_license.isTlsAvailable()) {
     qWarning("tls not available, disabling tls");
     m_pAppConfig->setTlsEnabled(false);
   }
