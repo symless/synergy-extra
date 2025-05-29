@@ -75,7 +75,7 @@ public:
   Product::Edition productEdition() const;
   QString productName() const;
   SetSerialKeyResult setLicense(const QString &hexString, bool allowExpired = false);
-  void clampFeatures(bool enableTlsIfAvailable);
+  void clampFeatures();
   void disable();
 
   bool isEnabled() const
