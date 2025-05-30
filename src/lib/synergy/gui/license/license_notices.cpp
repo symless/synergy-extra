@@ -37,6 +37,7 @@ QString licenseNotice(const License &license)
     return subscriptionLicenseNotice(license);
   } else {
     qFatal("license notice only for time limited licenses");
+    return ""; // Workaround for no return warning on Windows.
   }
 }
 
