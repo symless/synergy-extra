@@ -74,7 +74,7 @@ void ActivationDialog::refreshSerialKey()
 
   const auto &license = m_licenseHandler.license();
   if (license.isTimeLimited() && (license.isExpired() || license.isExpiringSoon())) {
-    m_ui->m_pLabelNotice->setText(licenseNotice(license));
+    m_ui->m_pLabelNotice->setText(licenseNotice(license, kColorWhite));
     m_ui->m_widgetNotice->show();
   } else {
     m_ui->m_widgetNotice->hide();
@@ -88,7 +88,7 @@ void ActivationDialog::showEvent(QShowEvent *event)
   QTimer::singleShot(0, this, [this]() {
     const auto &license = m_licenseHandler.license();
     if (license.isTimeLimited()) {
-      const auto notice = licenseNotice(license);
+      const auto notice = licenseNotice(license, kColorSecondary);
       if (license.isExpired()) {
         QMessageBox::warning(
             this, "License expired",

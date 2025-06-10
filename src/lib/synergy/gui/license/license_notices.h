@@ -23,6 +23,6 @@
 
 namespace synergy::gui {
 
-QString licenseNotice(const synergy::license::License &license);
+QString licenseNotice(const synergy::license::License &license, const QString &linkColor);
 
 } // namespace synergy::gui
