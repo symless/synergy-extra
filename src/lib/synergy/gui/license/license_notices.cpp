@@ -18,32 +18,30 @@
 #include "license_notices.h"
 
 #include "constants.h"
-#include "gui/styles.h"
 #include "synergy/license/License.h"
 
 using License = synergy::license::License;
-using namespace deskflow::gui;
 
 namespace synergy::gui {
 
-QString trialLicenseNotice(const License &license);
-QString subscriptionLicenseNotice(const License &license);
+QString trialLicenseNotice(const License &license, const QString &linkColor);
+QString subscriptionLicenseNotice(const License &license, const QString &linkColor);
 
-QString licenseNotice(const License &license)
+QString licenseNotice(const License &license, const QString &linkColor)
 {
   if (license.isTrial()) {
-    return trialLicenseNotice(license);
+    return trialLicenseNotice(license, linkColor);
   } else if (license.isSubscription()) {
-    return subscriptionLicenseNotice(license);
+    return subscriptionLicenseNotice(license, linkColor);
   } else {
     qFatal("license notice only for time limited licenses");
     return ""; // Workaround for no return warning on Windows.
   }
 }
 
-QString trialLicenseNotice(const License &license)
+QString trialLicenseNotice(const License &license, const QString &linkColor)
 {
-  const QString buyLink = QString(kLinkBuy).arg(kUrlContact).arg(kColorWhite);
+  const QString buyLink = QString(kLinkBuy).arg(kUrlContact).arg(linkColor);
   if (license.isExpired()) {
     return QString("<p>Your trial has ended. %1</p>").arg(buyLink);
   } else {
@@ -59,9 +57,9 @@ QString trialLicenseNotice(const License &license)
   }
 }
 
-QString subscriptionLicenseNotice(const License &license)
+QString subscriptionLicenseNotice(const License &license, const QString &linkColor)
 {
-  const QString renewLink = QString(kLinkRenew).arg(kUrlContact).arg(kColorWhite);
+  const QString renewLink = QString(kLinkRenew).arg(kUrlContact).arg(linkColor);
   if (license.isExpired()) {
     return QString("<p>Your license has expired. %1</p>").arg(renewLink);
   } else {
