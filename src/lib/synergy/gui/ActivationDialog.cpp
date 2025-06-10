@@ -200,7 +200,7 @@ void ActivationDialog::showSuccessDialog()
   const auto tlsAvailable = m_licenseHandler.license().isTlsAvailable();
   if (tlsAvailable && m_pAppConfig->tlsEnabled()) {
     message += "<p>To ensure that TLS encryption works correctly, "
-               "please use same serial key on all of your computers.</p>";
+               "please use the same serial key on all of your computers.</p>";
   }
 
   if (license.isTimeLimited()) {
