@@ -55,9 +55,9 @@ LicenseHandler::LicenseHandler()
   connect(&m_activator, &LicenseActivator::activationFailed, this, [this](const QString &message) {
     QString fullMessage = QString(
                               "<p>There was a problem activating your license.</p>"
-                              R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
-                              "and let us know this message:</p>"
                               "%3"
+                              R"(<p>Please <a href="%1" style="color: %2">contact us</a> )"
+                              "if there is anything we can do to help.</p>"
     )
                               .arg(kUrlContact)
                               .arg(kColorSecondary)
