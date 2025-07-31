@@ -50,8 +50,10 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   endif()
   message(VERBOSE "Git repo: " ${CMAKE_CURRENT_SOURCE_DIR})
 
+  # Creating a release tag through the GitHub UI creates a lightweight tag, so use --tags
+  # to include lightweight tags in the search.
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe origin/master --long --match "v[0-9]*"
+    COMMAND ${GIT_EXECUTABLE} describe origin/master --tags --long --match "v[0-9]*"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     OUTPUT_VARIABLE git_describe
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
