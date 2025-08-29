@@ -26,6 +26,18 @@
 #
 function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION)
 
+  option(SYNERGY_VERSION_RELEASE "Release version" OFF)
+  if ("$ENV{SYNERGY_VERSION_RELEASE}" STREQUAL "true")
+    message(VERBOSE "Release env var is set")
+    set(SYNERGY_VERSION_RELEASE ON)
+  endif()
+
+  option(SYNERGY_VERSION_SNAPSHOT "Snapshot version" OFF)
+  if ("$ENV{SYNERGY_VERSION_SNAPSHOT}" STREQUAL "true")
+    message(VERBOSE "Snapshot env var is set")
+    set(SYNERGY_VERSION_SNAPSHOT ON)
+  endif()
+
   set(version_file "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
   file(READ "${version_file}" version)
   string(STRIP "${version}" version)
@@ -67,22 +79,16 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   if ("${rev_count}" STREQUAL "")
     message(FATAL_ERROR "No revision count found in Git describe output")
   endif()
+  message(VERBOSE "Changes since last tag: " ${rev_count})
 
-  # Env var is normally controlled by CI, should be set when build triggered by a tag.
-  # Strangely, even with GitHub actions `actions/checkout@v4` option `fetch-depth: 0` 
-  # (gets all the tags), the `git describe` command only sometimes works as expected
-  # and returns the tag name (bug only reproducible on CI).
-  option(SYNERGY_RELEASE "Release version" OFF)
-  if ("$ENV{SYNERGY_RELEASE}" STREQUAL "true")
-    message(VERBOSE "Release env var is set")
-    set(SYNERGY_RELEASE ON)
-  endif()
-
-  if (SYNERGY_RELEASE)
+  if (SYNERGY_VERSION_RELEASE)
+    
     message(VERBOSE "Version is release")
     set(rev_count 0)
-  else()
-    message(VERBOSE "Changes since last tag: " ${rev_count})
+
+  elseif(SYNERGY_VERSION_SNAPSHOT)
+
+    message(VERBOSE "Version is snapshot")
 
     # The `snapshot` stage is set here regardless of what the stage is in the version file,
     # which serves 2 purposes:
@@ -90,6 +96,19 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     # 2. When uploading to the packages repo, files with `-snapshot` in the name are
     #    are uploaded to a separate directory, making packages easier for QA to find.
     set(version "${match_major}.${minor_match}.${patch_match}-snapshot+r${rev_count}")
+
+  else()
+    message(VERBOSE "Version is development")
+
+    execute_process(
+      COMMAND git rev-parse --short HEAD
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE git_sha
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    message(STATUS "Git SHA: ${git_sha}")
+    set(version "${match_major}.${minor_match}.${patch_match}-dev+${git_sha}")
   endif()
 
   set(${VERSION} "${version}" PARENT_SCOPE)
