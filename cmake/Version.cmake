@@ -81,7 +81,12 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   endif()
   message(VERBOSE "Changes since last tag: " ${rev_count})
 
-  if(SYNERGY_VERSION_SNAPSHOT)
+  if (SYNERGY_VERSION_RELEASE)
+    
+    message(VERBOSE "Version is release")
+    set(rev_count 0)
+
+  elseif(SYNERGY_VERSION_SNAPSHOT)
 
     message(VERBOSE "Version is snapshot")
 
@@ -91,11 +96,6 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     # 2. When uploading to the packages repo, files with `-snapshot` in the name are
     #    are uploaded to a separate directory, making packages easier for QA to find.
     set(version "${match_major}.${minor_match}.${patch_match}-snapshot+r${rev_count}")
-
-  elseif (SYNERGY_VERSION_RELEASE)
-    
-    message(VERBOSE "Version is release")
-    set(rev_count 0)
 
   else()
     message(VERBOSE "Version is development")
