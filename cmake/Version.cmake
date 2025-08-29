@@ -62,7 +62,6 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   endif()
   message(VERBOSE "Git repo: " ${CMAKE_CURRENT_SOURCE_DIR})
 
-
   # Creating a release tag through the GitHub UI creates a lightweight tag, so use --tags
   # to include lightweight tags in the search.
   execute_process(
@@ -97,7 +96,7 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     
     message(VERBOSE "Version is release")
     set(rev_count 0)
-    
+
   else()
     message(VERBOSE "Version is development")
 
