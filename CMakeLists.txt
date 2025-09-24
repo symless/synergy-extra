@@ -38,14 +38,8 @@ endif()
 message(STATUS "GUI res dir: ${GUI_RES_DIR}")
 set(GUI_QRC_FILE ${GUI_RES_DIR}/app.qrc)
 
-set(DEFAULT_ENABLE_ACTIVATION ON)
-if("$ENV{SYNERGY_ENABLE_ACTIVATION}" STREQUAL "false")
-  set(DEFAULT_ENABLE_ACTIVATION OFF)
-endif()
-
-# activation is off by default to make life easier for contributors.
-option(SYNERGY_ENABLE_ACTIVATION "Enable activation dialog, etc"
-       ${DEFAULT_ENABLE_ACTIVATION})
+# Activation is off by default to make life easier for contributors.
+option(SYNERGY_ENABLE_ACTIVATION "Enable activation dialog, etc" OFF)
 
 if(SYNERGY_ENABLE_ACTIVATION)
   message(STATUS "License activation is enabled")

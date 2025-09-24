@@ -82,13 +82,6 @@ macro(configure_meta)
   message(STATUS "Product name: ${SYNERGY_PRODUCT_NAME}")
   add_definitions(-DSYNERGY_PRODUCT_NAME="${SYNERGY_PRODUCT_NAME}")
 
-  if (NOT "${SYNERGY_EDITION_TYPE}" STREQUAL "")
-    message(STATUS "Edition type: ${SYNERGY_EDITION_TYPE}")
-  else()
-    message(STATUS "Edition type not set")
-  endif()
-  add_definitions(-DSYNERGY_EDITION_TYPE="${SYNERGY_EDITION_TYPE}")
-
   set(DESKFLOW_APP_ID
       "synergy"
       CACHE STRING "ID of the app for filenames, etc")
