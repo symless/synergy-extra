@@ -27,7 +27,16 @@
 function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION)
 
   option(SYNERGY_VERSION_RELEASE "Release version" OFF)
+  if ("$ENV{SYNERGY_VERSION_RELEASE}" STREQUAL "true")
+    message(VERBOSE "Release env var is set")
+    set(SYNERGY_VERSION_RELEASE ON)
+  endif()
+
   option(SYNERGY_VERSION_SNAPSHOT "Snapshot version" OFF)
+  if ("$ENV{SYNERGY_VERSION_SNAPSHOT}" STREQUAL "true")
+    message(VERBOSE "Snapshot env var is set")
+    set(SYNERGY_VERSION_SNAPSHOT ON)
+  endif()
 
   set(version_file "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
   file(READ "${version_file}" version)
@@ -92,9 +101,9 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     message(VERBOSE "Version is development")
 
     # Gotcha: GitHub checks out a detached head, so the local SHA is not the real head SHA.
-    if(NOT ${SYNERGY_VERSION_GIT_SHA} STREQUAL "")
+    if(NOT "$ENV{SYNERGY_VERSION_GIT_SHA}" STREQUAL "")
       message(VERBOSE "Getting Git SHA from env var")
-      set(git_sha "$SYNERGY_VERSION_GIT_SHA")
+      set(git_sha $ENV{SYNERGY_VERSION_GIT_SHA})
       string(SUBSTRING ${git_sha} 0 7 git_sha)
     else()
       message(VERBOSE "Getting local Git SHA")

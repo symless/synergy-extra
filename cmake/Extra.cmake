@@ -70,8 +70,11 @@ endmacro()
 
 macro(configure_meta)
 
-  if(NOT "${SYNERGY_PRODUCT_NAME}" STREQUAL "")
-    message(STATUS "Using configured product name")
+  if(NOT "$ENV{SYNERGY_PRODUCT_NAME}" STREQUAL "")
+    message(STATUS "Using product name from env var")
+    set(SYNERGY_PRODUCT_NAME
+        $ENV{SYNERGY_PRODUCT_NAME}
+        CACHE STRING "Product name")
   else()
     message(STATUS "Using default product name")
     set(SYNERGY_PRODUCT_NAME
@@ -81,6 +84,13 @@ macro(configure_meta)
 
   message(STATUS "Product name: ${SYNERGY_PRODUCT_NAME}")
   add_definitions(-DSYNERGY_PRODUCT_NAME="${SYNERGY_PRODUCT_NAME}")
+
+  if (NOT "${SYNERGY_EDITION_TYPE}" STREQUAL "")
+    message(STATUS "Edition type: ${SYNERGY_EDITION_TYPE}")
+  else()
+    message(STATUS "Edition type not set")
+  endif()
+  add_definitions(-DSYNERGY_EDITION_TYPE="${SYNERGY_EDITION_TYPE}")
 
   set(DESKFLOW_APP_ID
       "synergy"
