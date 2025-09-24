@@ -100,12 +100,20 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   else()
     message(VERBOSE "Version is development")
 
-    execute_process(
-      COMMAND git rev-parse --short HEAD
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-      OUTPUT_VARIABLE git_sha
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
+    # detect github sha if available
+    if(DEFINED ENV{SYNERGY_VERSION_GIT_SHA})
+      message(VERBOSE "Getting Git SHA from env var")
+      set(git_sha $ENV{SYNERGY_VERSION_GIT_SHA})
+      string(SUBSTRING ${git_sha} 0 7 git_sha)
+    else()
+      message(VERBOSE "Getting local Git SHA")
+      execute_process(
+        COMMAND git rev-parse --short HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE git_sha
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+    endif()
 
     message(STATUS "Git SHA: ${git_sha}")
     set(version "${match_major}.${minor_match}.${patch_match}-dev+${git_sha}")
