@@ -70,11 +70,8 @@ endmacro()
 
 macro(configure_meta)
 
-  if(NOT "$ENV{SYNERGY_PRODUCT_NAME}" STREQUAL "")
-    message(STATUS "Using product name from env var")
-    set(SYNERGY_PRODUCT_NAME
-        $ENV{SYNERGY_PRODUCT_NAME}
-        CACHE STRING "Product name")
+  if(NOT "${SYNERGY_PRODUCT_NAME}" STREQUAL "")
+    message(STATUS "Using configured product name")
   else()
     message(STATUS "Using default product name")
     set(SYNERGY_PRODUCT_NAME
