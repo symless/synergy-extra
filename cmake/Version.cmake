@@ -24,7 +24,7 @@
 #    than a revision of the last version, so we use the `VERSION` file as the source of truth
 #    for the version number rather than the last tag.
 #
-function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION GIT_SHA_SHORT)
+function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION)
 
   option(SYNERGY_VERSION_RELEASE "Release version" OFF)
   option(SYNERGY_VERSION_SNAPSHOT "Snapshot version" OFF)
@@ -121,6 +121,5 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   set(${VERSION_MINOR} ${minor_match} PARENT_SCOPE)
   set(${VERSION_PATCH} ${patch_match} PARENT_SCOPE)
   set(${VERSION_REVISION} ${rev_count} PARENT_SCOPE)
-  set(${GIT_SHA_SHORT} "${git_sha_short}" PARENT_SCOPE)
   
 endfunction()
