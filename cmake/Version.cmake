@@ -24,10 +24,17 @@
 #    than a revision of the last version, so we use the `VERSION` file as the source of truth
 #    for the version number rather than the last tag.
 #
-function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION)
+function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_REVISION GIT_SHA_SHORT)
 
   option(SYNERGY_VERSION_RELEASE "Release version" OFF)
   option(SYNERGY_VERSION_SNAPSHOT "Snapshot version" OFF)
+
+  # Gotcha: GitHub checks out a detached head, so the local SHA is not the real head SHA.
+  if(NOT "${SYNERGY_VERSION_GIT_SHA}" STREQUAL "")
+    message(VERBOSE "Getting Git SHA from env var")
+    string(SUBSTRING ${SYNERGY_VERSION_GIT_SHA} 0 7 git_sha_short)
+    message(STATUS "Git SHA: ${git_sha_short}")
+  endif()
 
   set(version_file "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
   file(READ "${version_file}" version)
@@ -91,23 +98,22 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   else()
     message(VERBOSE "Version is development")
 
-    # Gotcha: GitHub checks out a detached head, so the local SHA is not the real head SHA.
-    if(NOT ${SYNERGY_VERSION_GIT_SHA} STREQUAL "")
-      message(VERBOSE "Getting Git SHA from env var")
-      set(git_sha "${SYNERGY_VERSION_GIT_SHA}")
-      string(SUBSTRING ${git_sha} 0 7 git_sha)
-    else()
+    if("${SYNERGY_VERSION_GIT_SHA}" STREQUAL "")
       message(VERBOSE "Getting local Git SHA")
       execute_process(
         COMMAND git rev-parse --short HEAD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE git_sha
+        OUTPUT_VARIABLE git_sha_short
         OUTPUT_STRIP_TRAILING_WHITESPACE
       )
+      message(STATUS "Git SHA: ${git_sha_short}")
     endif()
 
-    message(STATUS "Git SHA: ${git_sha}")
-    set(version "${match_major}.${minor_match}.${patch_match}-dev+${git_sha}")
+    if ("${git_sha_short}" STREQUAL "")
+      message(FATAL_ERROR "No Git SHA found")
+    endif()
+
+    set(version "${match_major}.${minor_match}.${patch_match}-dev+${git_sha_short}")
   endif()
 
   set(${VERSION} "${version}" PARENT_SCOPE)
@@ -115,5 +121,6 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   set(${VERSION_MINOR} ${minor_match} PARENT_SCOPE)
   set(${VERSION_PATCH} ${patch_match} PARENT_SCOPE)
   set(${VERSION_REVISION} ${rev_count} PARENT_SCOPE)
+  set(${GIT_SHA_SHORT} "${git_sha_short}" PARENT_SCOPE)
   
 endfunction()
