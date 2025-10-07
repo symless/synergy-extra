@@ -92,22 +92,25 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
     message(VERBOSE "Version is development")
 
     # Gotcha: GitHub checks out a detached head, so the local SHA is not the real head SHA.
-    if(NOT ${SYNERGY_VERSION_GIT_SHA} STREQUAL "")
+    if(NOT "${SYNERGY_VERSION_GIT_SHA}" STREQUAL "")
       message(VERBOSE "Getting Git SHA from env var")
-      set(git_sha "${SYNERGY_VERSION_GIT_SHA}")
-      string(SUBSTRING ${git_sha} 0 7 git_sha)
+      string(SUBSTRING ${SYNERGY_VERSION_GIT_SHA} 0 7 git_sha_short)
     else()
       message(VERBOSE "Getting local Git SHA")
       execute_process(
         COMMAND git rev-parse --short HEAD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE git_sha
+        OUTPUT_VARIABLE git_sha_short
         OUTPUT_STRIP_TRAILING_WHITESPACE
       )
     endif()
 
-    message(STATUS "Git SHA: ${git_sha}")
-    set(version "${match_major}.${minor_match}.${patch_match}-dev+${git_sha}")
+    if ("${git_sha_short}" STREQUAL "")
+      message(FATAL_ERROR "No Git SHA found")
+    endif()
+
+    message(STATUS "Git SHA: ${git_sha_short}")
+    set(version "${match_major}.${minor_match}.${patch_match}-dev+${git_sha_short}")
   endif()
 
   set(${VERSION} "${version}" PARENT_SCOPE)

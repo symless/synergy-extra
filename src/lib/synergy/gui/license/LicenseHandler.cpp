@@ -18,7 +18,6 @@
 #include "LicenseHandler.h"
 
 #include "ActivationDialog.h"
-#include "common/constants.h"
 #include "dialogs/UpgradeDialog.h"
 #include "gui/config/AppConfig.h"
 #include "gui/core/CoreProcess.h"
@@ -26,6 +25,7 @@
 #include "synergy/gui/constants.h"
 #include "synergy/gui/license/license_utils.h"
 #include "synergy/license/Product.h"
+#include "version.h"
 
 #include <QAction>
 #include <QCheckBox>
@@ -228,10 +228,9 @@ bool LicenseHandler::handleCoreStart()
 
   const auto serialKey = QString::fromStdString(m_license.serialKey().hexString);
   const auto osName = QSysInfo::prettyProductName();
-  const auto appVersion = kVersion;
   const auto isServer = m_pAppConfig->serverGroupChecked();
 
-  m_activator.activate({machineSignature, hostnameSignature, serialKey, appVersion, osName, isServer});
+  m_activator.activate({machineSignature, hostnameSignature, serialKey, kVersion, osName, isServer});
 
   return false;
 }
