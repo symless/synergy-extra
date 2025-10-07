@@ -18,7 +18,7 @@
 #include "LicenseHandler.h"
 
 #include "ActivationDialog.h"
-#include "common/constants.h"
+#include "common/version.h"
 #include "dialogs/UpgradeDialog.h"
 #include "gui/config/AppConfig.h"
 #include "gui/core/CoreProcess.h"
