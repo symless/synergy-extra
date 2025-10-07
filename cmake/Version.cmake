@@ -91,7 +91,6 @@ function(version_from_git_tags VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
   else()
     message(VERBOSE "Version is development")
 
-
     # Gotcha: GitHub checks out a detached head, so the local SHA is not the real head SHA.
     if(NOT "${SYNERGY_VERSION_GIT_SHA}" STREQUAL "")
       message(VERBOSE "Getting Git SHA from env var")
