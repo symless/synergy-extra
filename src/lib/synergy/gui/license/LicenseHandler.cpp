@@ -216,6 +216,11 @@ bool LicenseHandler::handleCoreStart()
     return true;
   }
 
+  if (!m_license.isValid()) {
+    qWarning("no valid license, skipping core start");
+    return false;
+  }
+
   qInfo("activating license");
 
   const auto machineId = QSysInfo::machineUniqueId();
