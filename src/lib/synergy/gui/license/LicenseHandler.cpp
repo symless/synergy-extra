@@ -31,13 +31,17 @@
 #include <QCheckBox>
 #include <QCoreApplication>
 #include <QCryptographicHash>
+#include <QDateTime>
 #include <QDebug>
 #include <QDialog>
+#include <QHostInfo>
 #include <QMainWindow>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QObject>
 #include <QProcessEnvironment>
 #include <QRadioButton>
+#include <QSysInfo>
 #include <QTimer>
 #include <QtCore>
 #include <chrono>
@@ -52,7 +56,7 @@ LicenseHandler::LicenseHandler()
 {
   m_enabled = synergy::gui::license::isActivationEnabled();
 
-  connect(&m_activator, &LicenseActivator::activationFailed, this, [this](const QString &message) {
+  connect(&m_apiClient, &LicenseApiClient::activationFailed, this, [this](const QString &message) {
     QString fullMessage = QString(
                               "<p>There was a problem activating your license.</p>"
                               "%3"
@@ -68,10 +72,12 @@ LicenseHandler::LicenseHandler()
     return showSerialKeyDialog();
   });
 
-  connect(&m_activator, &LicenseActivator::activationSucceeded, this, [this] {
+  connect(&m_apiClient, &LicenseApiClient::activationSucceeded, this, [this] {
     qDebug("license activation succeeded, saving settings");
     m_settings.setActivated(true);
+    m_settings.setGraceStartEpochSecs(0);
     m_settings.sync();
+    m_warnedAboutGrace = false;
 
     if (m_pCoreProcess == nullptr) {
       qFatal("core process not set");
@@ -80,6 +86,9 @@ LicenseHandler::LicenseHandler()
     qDebug("resuming core process after activation");
     m_pCoreProcess->start();
   });
+
+  connect(&m_apiClient, &LicenseApiClient::checkSucceeded, this, &LicenseHandler::handleRemoteCheckSucceeded);
+  connect(&m_apiClient, &LicenseApiClient::checkFailed, this, &LicenseHandler::handleRemoteCheckFailed);
 }
 
 void LicenseHandler::handleMainWindow(
@@ -136,6 +145,7 @@ bool LicenseHandler::handleAppStart()
   qDebug("license is valid, continuing with start");
   updateWindowTitle();
   clampFeatures();
+  runRemoteCheck();
   return true;
 }
 
@@ -184,7 +194,7 @@ bool LicenseHandler::handleCoreStart()
 {
   // HACK: For some reason, the core start trigger gets called twice when clicking the 'start' button.
   // If the activator is called twice in quick succession, the core is started twice.
-  if (m_activator.isBusy()) {
+  if (m_apiClient.isBusy()) {
     qDebug("activator is busy, skipping core start handler");
     return false;
   }
@@ -222,20 +232,7 @@ bool LicenseHandler::handleCoreStart()
   }
 
   qInfo("activating license");
-
-  const auto machineId = QSysInfo::machineUniqueId();
-  const auto hostname = QHostInfo::localHostName();
-
-  // Protect the customer by anonymizing the machine ID and hostname so that if leaked accidentally,
-  // the information cannot be used as an attack vector on the customer by a bad actor.
-  const QString machineSignature = QCryptographicHash::hash(machineId, QCryptographicHash::Sha256).toHex();
-  const auto hostnameSignature = QCryptographicHash::hash(hostname.toUtf8(), QCryptographicHash::Sha256).toHex();
-
-  const auto serialKey = QString::fromStdString(m_license.serialKey().hexString);
-  const auto osName = QSysInfo::prettyProductName();
-  const auto isServer = m_pAppConfig->serverGroupChecked();
-
-  m_activator.activate({machineSignature, hostnameSignature, serialKey, kVersion, osName, isServer});
+  m_apiClient.activate(buildApiData());
 
   return false;
 }
@@ -289,6 +286,8 @@ bool LicenseHandler::showSerialKeyDialog()
     // Reset activation so new serial key can be activated.
     qDebug("serial key changed, updating settings");
     m_settings.setActivated(false);
+    m_settings.setGraceStartEpochSecs(0);
+    m_warnedAboutGrace = false;
     m_settings.sync();
   }
 
@@ -299,6 +298,14 @@ bool LicenseHandler::showSerialKeyDialog()
   if (dialog.serialKeyChanged() && m_pCoreProcess->isStarted()) {
     qDebug("restarting core on serial key change");
     m_pCoreProcess->restart();
+  }
+
+  // If the user accepted the dialog while not activated (e.g. recovering from a
+  // remote disable), retry activation so something visible happens regardless of
+  // whether the serial key changed.
+  if (!m_settings.activated() && m_license.isValid() && !m_license.serialKey().isOffline && !m_apiClient.isBusy()) {
+    qInfo("retrying activation after dialog accept");
+    m_apiClient.activate(buildApiData());
   }
 
   qDebug("license serial key dialog accepted");
@@ -425,7 +432,11 @@ bool LicenseHandler::check()
     qDebug("license validation failed, license expired");
     return showSerialKeyDialog();
   } else if (m_license.isExpiringSoon()) {
-    qDebug("license is expiring soon, skipping activation dialog");
+    if (isInGracePeriod()) {
+      qDebug("license expiring soon but in remote grace period, suppressing renew nag");
+      return true;
+    }
+    qDebug("license is expiring soon, showing serial key dialog");
     showSerialKeyDialog();
     // Return true even if dialog cancelled, since expiring soon licenses are still valid.
     return true;
@@ -459,4 +470,133 @@ void LicenseHandler::disable()
 {
   qDebug("disabling license handler");
   m_enabled = false;
+}
+
+bool LicenseHandler::isInGracePeriod() const
+{
+  return m_settings.graceStartEpochSecs() > 0;
+}
+
+bool LicenseHandler::isGracePeriodExpired() const
+{
+  if (!isInGracePeriod()) {
+    return false;
+  }
+  const auto now = QDateTime::currentSecsSinceEpoch();
+  const auto elapsed = seconds{now - m_settings.graceStartEpochSecs()};
+  return elapsed >= duration_cast<seconds>(kLicenseGracePeriod);
+}
+
+LicenseApiClient::Data LicenseHandler::buildApiData() const
+{
+  const auto machineId = QSysInfo::machineUniqueId();
+  const auto hostname = QHostInfo::localHostName();
+
+  // Anonymise so a leak doesn't reveal which customer machine the data belongs to.
+  const auto machineSignature = QCryptographicHash::hash(machineId, QCryptographicHash::Sha256).toHex();
+  const auto hostnameSignature = QCryptographicHash::hash(hostname.toUtf8(), QCryptographicHash::Sha256).toHex();
+
+  return {
+      machineSignature,
+      hostnameSignature,
+      QString::fromStdString(m_license.serialKey().hexString),
+      kVersion,
+      QSysInfo::prettyProductName(),
+      m_pAppConfig->serverGroupChecked()
+  };
+}
+
+void LicenseHandler::runRemoteCheck()
+{
+  if (!m_settings.activated() || !m_license.isValid() || m_license.serialKey().isOffline) {
+    qDebug("license not activated or offline, skipping remote check");
+    return;
+  }
+
+  if (m_apiClient.isBusy()) {
+    qDebug("license activator busy, skipping remote check");
+    return;
+  }
+
+  qInfo("running remote license check");
+  m_apiClient.check(buildApiData());
+}
+
+void LicenseHandler::handleRemoteCheckSucceeded()
+{
+  qInfo("remote license check succeeded");
+
+  const bool wasInGrace = isInGracePeriod();
+  m_settings.setGraceStartEpochSecs(0);
+  m_settings.sync();
+  m_warnedAboutGrace = false;
+
+  if (wasInGrace && m_pMainWindow != nullptr) {
+    QMessageBox::information(
+        m_pMainWindow, "License restored", tr("Your license is valid again. Thanks for your patience.")
+    );
+  }
+}
+
+void LicenseHandler::handleRemoteCheckFailed(const QString &message)
+{
+  qWarning().noquote() << "remote license check failed:" << message;
+
+  if (!isInGracePeriod()) {
+    m_settings.setGraceStartEpochSecs(QDateTime::currentSecsSinceEpoch());
+    m_settings.sync();
+  }
+
+  if (isGracePeriodExpired()) {
+    disableLicenseRemotely(message);
+    return;
+  }
+
+  if (!m_warnedAboutGrace && m_pMainWindow != nullptr) {
+    m_warnedAboutGrace = true;
+    const auto graceDays = static_cast<int>(kLicenseGracePeriod.count());
+    QMessageBox::warning(
+        m_pMainWindow, "License check failed",
+        tr("<p>We could not verify your license:</p>"
+           "<p><i>%1</i></p>"
+           "<p>%2 will keep working for %3 days. "
+           R"(If the problem persists, please <a href="%4" style="color: %5">contact us</a>.)"
+           "</p>")
+            .arg(message.toHtmlEscaped())
+            .arg(productName())
+            .arg(graceDays)
+            .arg(kUrlContact)
+            .arg(kColorSecondary)
+    );
+  }
+}
+
+void LicenseHandler::disableLicenseRemotely(const QString &reason)
+{
+  qWarning().noquote() << "license grace period expired, disabling:" << reason;
+
+  if (m_pCoreProcess != nullptr && m_pCoreProcess->isStarted()) {
+    qDebug("stopping core process due to disabled license");
+    m_pCoreProcess->stop();
+  }
+
+  // Keep the serial key + in-memory license so the next activation attempt can succeed
+  // automatically if the server re-enables the license (e.g. after the customer pays).
+  m_settings.setActivated(false);
+  m_settings.setGraceStartEpochSecs(0);
+  m_settings.sync();
+  m_warnedAboutGrace = false;
+
+  if (m_pMainWindow != nullptr) {
+    QMessageBox::warning(
+        m_pMainWindow, "License disabled",
+        tr("<p>Your license has been disabled and could not be verified within the grace period:</p>"
+           "<p><i>%1</i></p>"
+           R"(<p>Please <a href="%2" style="color: %3">contact us</a> to restore access. )"
+           "Once your license is reinstated, the app will resume automatically.</p>")
+            .arg(reason.toHtmlEscaped())
+            .arg(kUrlContact)
+            .arg(kColorSecondary)
+    );
+  }
 }

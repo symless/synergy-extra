@@ -52,9 +52,19 @@ public:
     m_activated = activated;
   }
 
+  qint64 graceStartEpochSecs() const
+  {
+    return m_graceStartEpochSecs;
+  }
+  void setGraceStartEpochSecs(qint64 epochSecs)
+  {
+    m_graceStartEpochSecs = epochSecs;
+  }
+
 private:
   QString m_serialKey;
   bool m_activated = false;
+  qint64 m_graceStartEpochSecs = 0;
 };
 
 } // namespace synergy::gui

@@ -19,6 +19,8 @@
 
 #include <QString>
 
+#include <chrono>
+
 namespace synergy::gui {
 
 const auto kProProductName = "Synergy 1 Pro";
@@ -36,5 +38,8 @@ const auto kUrlPersonalUpgrade = QString("%1/purchase/upgrade?%2").arg(kUrlWebsi
 const auto kUrlContact = QString("%1/contact?%2").arg(kUrlWebsite, kUrlSourceQuery);
 
 const auto kUrlApiLicenseActivate = QString("%1/product/activate").arg(kUrlApi);
+const auto kUrlApiLicenseCheck = QString("%1/product/check").arg(kUrlApi);
+
+constexpr auto kLicenseGracePeriod = std::chrono::days{14};
 
 } // namespace synergy::gui
