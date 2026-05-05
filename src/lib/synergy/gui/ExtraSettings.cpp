@@ -26,12 +26,14 @@ namespace synergy::gui {
 
 const auto kSerialKeySettingKey = "serialKey";
 const auto kActivatedSettingKey = "activated";
+const auto kGraceStartSettingKey = "graceStartEpochSecs";
 
 void ExtraSettings::load()
 {
   const auto &settings = getActiveSettings();
   m_serialKey = settings.value(kSerialKeySettingKey).toString();
   m_activated = settings.value(kActivatedSettingKey).toBool();
+  m_graceStartEpochSecs = settings.value(kGraceStartSettingKey).toLongLong();
 }
 
 void ExtraSettings::sync()
@@ -44,6 +46,7 @@ void ExtraSettings::sync()
 
   settings.setValue(kSerialKeySettingKey, m_serialKey);
   settings.setValue(kActivatedSettingKey, m_activated);
+  settings.setValue(kGraceStartSettingKey, m_graceStartEpochSecs);
   settings.sync();
 }
 

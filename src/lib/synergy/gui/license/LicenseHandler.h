@@ -19,7 +19,7 @@
 
 #include "synergy/gui/AppTime.h"
 #include "synergy/gui/ExtraSettings.h"
-#include "synergy/gui/license/LicenseActivator.h"
+#include "synergy/gui/license/LicenseApiClient.h"
 #include "synergy/license/License.h"
 #include "synergy/license/Product.h"
 
@@ -89,12 +89,20 @@ private:
   void updateWindowTitle() const;
   bool showSerialKeyDialog();
   bool check();
+  void runRemoteCheck();
+  void handleRemoteCheckSucceeded();
+  void handleRemoteCheckFailed(const QString &message);
+  bool isInGracePeriod() const;
+  bool isGracePeriodExpired() const;
+  void disableLicenseRemotely(const QString &reason);
+  synergy::gui::license::LicenseApiClient::Data buildApiData() const;
 
   bool m_enabled = true;
   synergy::gui::AppTime m_time;
   License m_license = License::invalid();
   synergy::gui::ExtraSettings m_settings;
-  synergy::gui::license::LicenseActivator m_activator;
+  synergy::gui::license::LicenseApiClient m_apiClient;
+  bool m_warnedAboutGrace = false;
   QMainWindow *m_pMainWindow = nullptr;
   AppConfig *m_pAppConfig = nullptr;
   deskflow::gui::CoreProcess *m_pCoreProcess = nullptr;

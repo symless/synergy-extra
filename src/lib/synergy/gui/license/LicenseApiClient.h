@@ -25,7 +25,7 @@ class QNetworkReply;
 
 namespace synergy::gui::license {
 
-class LicenseActivator : public QObject
+class LicenseApiClient : public QObject
 {
   Q_OBJECT
 
@@ -40,9 +40,10 @@ public:
     bool isServer;
   };
 
-  explicit LicenseActivator();
+  explicit LicenseApiClient();
 
-  void activate(Data activateData);
+  void activate(Data data);
+  void check(Data data);
 
   bool isBusy()
   {
@@ -52,15 +53,25 @@ public:
 signals:
   void activationFailed(const QString &message);
   void activationSucceeded();
+  void checkFailed(const QString &message);
+  void checkSucceeded();
 
 private slots:
   void handleResponse(QNetworkReply *reply);
 
 private:
-  QByteArray getRequestData(Data activateData);
+  enum class RequestKind
+  {
+    kActivate,
+    kCheck
+  };
+
+  void post(RequestKind kind, const QUrl &url, const Data &data);
+  QByteArray getRequestData(const Data &data) const;
 
   QNetworkAccessManager m_manager;
   bool m_isBusy = false;
+  RequestKind m_pendingKind = RequestKind::kActivate;
 };
 
 } // namespace synergy::gui::license
