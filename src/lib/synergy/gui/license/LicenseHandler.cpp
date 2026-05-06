@@ -193,13 +193,6 @@ void LicenseHandler::handleVersionCheck(QString &versionUrl)
 
 bool LicenseHandler::handleCoreStart()
 {
-  // HACK: For some reason, the core start trigger gets called twice when clicking the 'start' button.
-  // If the activator is called twice in quick succession, the core is started twice.
-  if (m_apiClient.isBusy()) {
-    qDebug("activator is busy, skipping core start handler");
-    return false;
-  }
-
   if (!m_enabled) {
     qDebug("license handler disabled, skipping core start handler");
     return true;
@@ -229,6 +222,13 @@ bool LicenseHandler::handleCoreStart()
 
   if (!m_license.isValid()) {
     qWarning("no valid license, skipping core start");
+    return false;
+  }
+
+  // HACK: For some reason, the core start trigger gets called twice when clicking the 'start' button.
+  // If the activator is called twice in quick succession, the core is started twice.
+  if (m_apiClient.isBusy()) {
+    qDebug("activator is busy, skipping core start handler");
     return false;
   }
 
