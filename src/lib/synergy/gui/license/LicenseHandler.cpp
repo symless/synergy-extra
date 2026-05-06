@@ -89,6 +89,7 @@ LicenseHandler::LicenseHandler()
 
   connect(&m_apiClient, &LicenseApiClient::checkSucceeded, this, &LicenseHandler::handleRemoteCheckSucceeded);
   connect(&m_apiClient, &LicenseApiClient::checkFailed, this, &LicenseHandler::handleRemoteCheckFailed);
+  connect(&m_apiClient, &LicenseApiClient::licenseDisabled, this, &LicenseHandler::disableLicenseRemotely);
 }
 
 void LicenseHandler::handleMainWindow(
