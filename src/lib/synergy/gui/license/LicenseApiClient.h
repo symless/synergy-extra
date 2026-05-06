@@ -55,6 +55,7 @@ signals:
   void activationSucceeded();
   void checkFailed(const QString &message);
   void checkSucceeded();
+  void licenseDisabled(const QString &message);
 
 private slots:
   void handleResponse(QNetworkReply *reply);

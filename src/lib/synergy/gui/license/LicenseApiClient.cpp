@@ -127,9 +127,15 @@ void LicenseApiClient::handleResponse(QNetworkReply *reply)
 
     if (!message.isEmpty()) {
       qWarning().noquote() << "license api message:" << message;
-      emitFailed(message);
     } else {
       qWarning("license api message was empty");
+    }
+
+    if (status == "disabled") {
+      Q_EMIT licenseDisabled(message.isEmpty() ? QStringLiteral("License has been disabled.") : message);
+    } else if (!message.isEmpty()) {
+      emitFailed(message);
+    } else {
       emitFailed("License request failed, unknown error.");
     }
 
