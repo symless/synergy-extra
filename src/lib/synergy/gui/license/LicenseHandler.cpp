@@ -83,6 +83,11 @@ LicenseHandler::LicenseHandler()
       qFatal("core process not set");
     }
 
+    if (m_pCoreProcess->mode() == CoreProcess::Mode::None) {
+      qDebug("no core mode selected, not resuming core process after activation");
+      return;
+    }
+
     qDebug("resuming core process after activation");
     m_pCoreProcess->start();
   });
