@@ -379,7 +379,8 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
   using enum LicenseHandler::SetSerialKeyResult;
 
   if (hexString.isEmpty()) {
-    qFatal("serial key is empty");
+    qWarning("serial key is empty, ignoring");
+    return kInvalid;
   }
 
   qDebug() << "changing serial key to:" << hexString;
