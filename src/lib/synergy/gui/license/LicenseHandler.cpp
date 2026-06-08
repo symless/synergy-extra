@@ -83,6 +83,11 @@ LicenseHandler::LicenseHandler()
       qFatal("core process not set");
     }
 
+    if (m_pCoreProcess->mode() == CoreProcess::Mode::None) {
+      qDebug("no core mode selected, not resuming core process after activation");
+      return;
+    }
+
     qDebug("resuming core process after activation");
     m_pCoreProcess->start();
   });
@@ -379,7 +384,8 @@ LicenseHandler::SetSerialKeyResult LicenseHandler::setLicense(const QString &hex
   using enum LicenseHandler::SetSerialKeyResult;
 
   if (hexString.isEmpty()) {
-    qFatal("serial key is empty");
+    qDebug("serial key is empty, ignoring");
+    return kInvalid;
   }
 
   qDebug() << "changing serial key to:" << hexString;
@@ -460,7 +466,8 @@ void LicenseHandler::clampFeatures()
   }
 
   if (m_pAppConfig->isSystemScope() && !m_license.isSettingsScopeAvailable()) {
-    qFatal("settings scope not available");
+    qWarning("settings scope not available, reverting to user scope");
+    m_pAppConfig->setIsSystemScope(false);
   }
 
   qDebug("committing default feature settings");
