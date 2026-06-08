@@ -460,7 +460,8 @@ void LicenseHandler::clampFeatures()
   }
 
   if (m_pAppConfig->isSystemScope() && !m_license.isSettingsScopeAvailable()) {
-    qFatal("settings scope not available");
+    qWarning("settings scope not available, reverting to user scope");
+    m_pAppConfig->setIsSystemScope(false);
   }
 
   qDebug("committing default feature settings");
