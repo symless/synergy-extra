@@ -28,7 +28,7 @@ const auto kBusinessProductName = "Synergy 1 Business";
 
 const auto kUrlApi = "https://symless.com/api";
 const auto kUrlWebsite = DESKFLOW_WEBSITE_URL;
-const auto kUrlSourceQuery = "source=gui";
+const auto kUrlSourceQuery = "utm_source=gui-s1";
 
 const auto kLinkBuy = R"(<a href="%1" style="color: %2">Buy now</a>)";
 const auto kLinkRenew = R"(<a href="%1" style="color: %2">Renew now</a>)";

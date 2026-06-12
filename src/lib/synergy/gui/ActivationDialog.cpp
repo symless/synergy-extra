@@ -27,6 +27,7 @@
 #include "ui_ActivationDialog.h"
 
 #include <QApplication>
+#include <QFontDatabase>
 #include <QMessageBox>
 #include <QScreen>
 #include <QStyle>
@@ -48,6 +49,7 @@ ActivationDialog::ActivationDialog(QWidget *parent, AppConfig &appConfig, Licens
   m_ui->setupUi(this);
 
   m_ui->m_pLabelNotice->setStyleSheet(kStyleNoticeLabel);
+  m_ui->m_pTextEditSerialKey->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 
   refreshSerialKey();
 }
