@@ -521,6 +521,21 @@ void LicenseHandler::runRemoteCheck()
     return;
   }
 
+  // Personal licenses activate once and are never re-validated, so they keep working on
+  // offline and restricted networks. Only business licenses are re-checked.
+  if (m_license.productEdition() != Product::Edition::kBusiness) {
+    if (isInGracePeriod()) {
+      // Nothing else clears grace once personal checks stop, and a stale grace flag
+      // suppresses the renew nag forever.
+      qInfo("clearing stale grace period for personal license");
+      m_settings.setGraceStartEpochSecs(0);
+      m_settings.sync();
+      m_warnedAboutGrace = false;
+    }
+    qDebug("personal license, skipping remote check");
+    return;
+  }
+
   if (m_apiClient.isBusy()) {
     qDebug("license activator busy, skipping remote check");
     return;
