@@ -48,11 +48,12 @@ else()
   message(STATUS "License activation is disabled")
 endif()
 
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Network)
 find_package(
-  Qt6
+  Qt${QT_VERSION_MAJOR}
   COMPONENTS Core Widgets Network
   REQUIRED)
 
-message(STATUS "Qt version: ${Qt6_VERSION}")
+message(STATUS "Qt version: ${Qt${QT_VERSION_MAJOR}_VERSION}")
 
 add_subdirectory(src)

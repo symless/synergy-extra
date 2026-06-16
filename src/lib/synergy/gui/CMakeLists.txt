@@ -37,6 +37,6 @@ target_link_libraries(
   ${target}
   gui
   license
-  Qt6::Core
-  Qt6::Widgets
-  Qt6::Network)
+  Qt${QT_VERSION_MAJOR}::Core
+  Qt${QT_VERSION_MAJOR}::Widgets
+  Qt${QT_VERSION_MAJOR}::Network)
